@@ -1,0 +1,20 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+
+# Eclipse
+.classpath
+.project
+.settings/
+.metadata/
+bin/
+
+# IntelliJ IDEA (Por si algún compañero usa otro IDE)
+.idea/
+*.iml
+
+# Mac
+.DS_Store
