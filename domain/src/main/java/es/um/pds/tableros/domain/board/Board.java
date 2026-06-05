@@ -75,5 +75,24 @@ public class Board {
             throw new IllegalStateException("La lista '" + targetList.getNombre() + "' ha alcanzado su límite máximo de tarjetas");
         }
     }
+    
+    /**
+     * Actualiza los contadores de las listas internas cuando una tarjeta se mueve.
+     */
+    public void registrarMovimientoTarjeta(ListId listaOrigenId, ListId listaDestinoId) {
+        // Restamos 1 a la lista de origen (puede ser nula si la tarjeta se acaba de crear)
+        if (listaOrigenId != null) {
+            this.tasksLists.stream()
+			                .filter(l -> l.getId().equals(listaOrigenId))
+			                .findFirst()
+			                .ifPresent(lista -> lista.decrementaCards());
+        }
+
+        // Sumamos 1 a la lista de destino
+        this.tasksLists.stream()
+			            .filter(l -> l.getId().equals(listaDestinoId))
+			            .findFirst()
+			            .ifPresent(lista -> lista.incrementaCards());
+    }
 
 }
