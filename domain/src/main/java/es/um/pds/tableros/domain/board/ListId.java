@@ -23,8 +23,12 @@ public final class ListId {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ListId)) return false;
+        if (this == o) {
+        	return true;
+        }
+        if (!(o instanceof ListId)) {
+        	return false;
+        }
         ListId listId = (ListId) o;
         return Objects.equals(value, listId.value);
     }
