@@ -1,7 +1,8 @@
 package es.um.pds.tableros.infrastructure.persistence;
 
-import es.um.pds.tableros.domain.card.CardRepository;
 import org.springframework.stereotype.Repository;
+
+import es.um.pds.tableros.domain.ports.output.CardRepository;
 
 @Repository
 public class CardRepositoryImpl implements CardRepository {

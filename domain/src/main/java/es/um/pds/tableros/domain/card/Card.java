@@ -3,6 +3,7 @@ package es.um.pds.tableros.domain.card;
 import es.um.pds.tableros.domain.board.BoardId;
 import es.um.pds.tableros.domain.board.ListId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Card {
@@ -51,10 +52,10 @@ public class Card {
     	return isCompletada; 
     }
     public List<Etiqueta> getEtiquetas() { 
-    	return new ArrayList<>(etiquetas);
+    	return Collections.unmodifiableList(etiquetas);
     }
     public List<String> getChecklistItems() { 
-    	return new ArrayList<>(checklistItems); 
+    	return Collections.unmodifiableList(checklistItems); 
     }
     
     //Métodos
