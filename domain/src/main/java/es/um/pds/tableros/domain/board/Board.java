@@ -1,6 +1,7 @@
 package es.um.pds.tableros.domain.board;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Board {
@@ -36,7 +37,7 @@ public class Board {
     	return isLocked; 
     }
     public List<TaskList> getTasksLists() { 
-    	return new ArrayList<>(tasksLists);
+    	return Collections.unmodifiableList(tasksLists);
     }
     public ListId getListCompletadas() { 
     	return listCompletadas; 
