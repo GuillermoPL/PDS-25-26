@@ -5,15 +5,28 @@ import es.um.pds.tableros.domain.board.ListId;
 import es.um.pds.tableros.domain.card.Card;
 
 public class CardMovementService {
+    
+    // Instancia única estática y privada
+    private static final CardMovementService INSTANCE = new CardMovementService();
+
+
+    private CardMovementService() {}
+
+    // Método de acceso global a la instancia
+    public static CardMovementService getInstance() {
+        return INSTANCE;
+    }
+
     /**
      * Mueve una tarjeta de lista validando las invariantes de negocio del tablero.
      * @return String representación de la traza.
      */
-	public String moveCard(Card card, Board board, ListId targetListId) {
+    public String moveCard(Card card, Board board, ListId targetListId) {
         if (!card.getBoardId().equals(board.getId())) {
             throw new IllegalArgumentException("La tarjeta no pertenece al tablero especificado");
         }
-         //Verificamos que podemos mover la tarjeta a la lista (límite de tarjetas en la lista)
+        
+        // Verificamos que podemos mover la tarjeta a la lista (límite de tarjetas en la lista)
         board.verificaAnadirCard(targetListId);
 
         ListId oldListId = card.getListIdActual();
@@ -24,7 +37,7 @@ public class CardMovementService {
         // Actualizamos los contadores en el Tablero
         board.registrarMovimientoTarjeta(oldListId, targetListId);
 
-        //Si pasamos la tarjeta a la lista de tareas completas la marcamos como completada
+        // Si pasamos la tarjeta a la lista de tareas completas la marcamos como completada
         if (board.getListCompletadas() != null && board.getListCompletadas().equals(targetListId)) {
             card.marcarCompletada();
         }
