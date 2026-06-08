@@ -30,7 +30,7 @@ public class CardMovementService {
         }
 
         String traceLog = String.format("Tarjeta [%s] movida de la lista [%s] a la lista [%s] en el tablero [%s].", 
-        		card.getId().getValue(), oldListId.getValue(), targetListId.getValue(), board.getId().getValue());
+        		card.getId().value(), oldListId.value(), targetListId.value(), board.getId().value());
         
         return traceLog;
     }
