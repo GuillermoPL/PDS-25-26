@@ -6,15 +6,12 @@ import java.util.List;
 public class Board {
     private final BoardId id;
     private String titulo;
-    private final String email; //El email es único y no se puede cambiar
+    private final Email email; //El email es único y no se puede cambiar
     private boolean isLocked;
     private final List<TaskList> tasksLists;
     private ListId listCompletadas; // Lista especial para completadas
 
-    public Board(BoardId id, String titulo, String email) {
-        if (email == null || !email.contains("@")) {
-            throw new IllegalArgumentException("Debe proporcionar un correo electrónico válido");
-        }
+    public Board(BoardId id, String titulo, Email email) {
         this.id = id;
         this.titulo = titulo;
         this.email = email;
@@ -29,7 +26,7 @@ public class Board {
     public String getTitulo() { 
     	return titulo; 
     }
-    public String getEmail() { 
+    public Email getEmail() { 
     	return email; 
     }
     public boolean isLocked() { 
