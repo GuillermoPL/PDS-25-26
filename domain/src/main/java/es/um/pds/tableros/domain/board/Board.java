@@ -94,5 +94,23 @@ public class Board {
 			            .findFirst()
 			            .ifPresent(lista -> lista.incrementaCards());
     }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+        	return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+        	return false;
+        }
+        Board board = (Board) o;
+        // Solo comparamos por su BoardId
+        return java.util.Objects.equals(id, board.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(id);
+    }
 
 }

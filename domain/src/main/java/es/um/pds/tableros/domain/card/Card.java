@@ -82,5 +82,23 @@ public class Card {
     public void eliminarEtiqueta(Etiqueta etiqueta) {
         this.etiquetas.remove(etiqueta);
     }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+        	return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+        	return false;
+        }
+        Card card = (Card) o;
+        // Solo comparamos por su CardId
+        return java.util.Objects.equals(id, card.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(id);
+    }
 
 }
