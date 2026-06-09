@@ -7,15 +7,12 @@ import java.util.List;
 public class Board {
     private final BoardId id;
     private String titulo;
-    private final String email; //El email es único y no se puede cambiar
+    private final Email email; //El email es único y no se puede cambiar
     private boolean isLocked;
     private final List<TaskList> tasksLists;
     private ListId listCompletadas; // Lista especial para completadas
 
-    public Board(BoardId id, String titulo, String email) {
-        if (email == null || !email.contains("@")) {
-            throw new IllegalArgumentException("Debe proporcionar un correo electrónico válido");
-        }
+    public Board(BoardId id, String titulo, Email email) {
         this.id = id;
         this.titulo = titulo;
         this.email = email;
@@ -30,7 +27,7 @@ public class Board {
     public String getTitulo() { 
     	return titulo; 
     }
-    public String getEmail() { 
+    public Email getEmail() { 
     	return email; 
     }
     public boolean isLocked() { 
@@ -44,11 +41,16 @@ public class Board {
     }
     
     //Métodos
-    public void addList(TaskList list) {
+    public void addList(String nombre, Integer maxCards) {
         if (isLocked) {
             throw new IllegalStateException("No se pueden añadir listas a un tablero bloqueado");
         }
-        this.tasksLists.add(list);
+        
+        // El propio Tablero genera la ID e instancia su entidad interna
+        ListId nuevaListId = ListId.generate();
+        TaskList nuevaLista = new TaskList(nuevaListId, nombre, maxCards);
+        
+        this.tasksLists.add(nuevaLista);
     }
 
     public void defineListCompletadas(ListId listId) {
@@ -94,6 +96,24 @@ public class Board {
 			            .filter(l -> l.getId().equals(listaDestinoId))
 			            .findFirst()
 			            .ifPresent(lista -> lista.incrementaCards());
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+        	return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+        	return false;
+        }
+        Board board = (Board) o;
+        // Solo comparamos por su BoardId
+        return java.util.Objects.equals(id, board.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(id);
     }
 
 }
