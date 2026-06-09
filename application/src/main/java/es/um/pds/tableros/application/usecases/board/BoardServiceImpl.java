@@ -1,0 +1,115 @@
+package es.um.pds.tableros.application.usecases.board;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import es.um.pds.tableros.domain.board.Board;
+import es.um.pds.tableros.domain.board.BoardId;
+import es.um.pds.tableros.domain.board.Email;
+import es.um.pds.tableros.domain.board.ListId;
+import es.um.pds.tableros.domain.ports.input.board.BoardService;
+import es.um.pds.tableros.domain.ports.input.board.commands.AnadirListCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.CambiarBloqueoBoardCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.CrearBoardCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.DefinirListCompletadasCommand;
+import es.um.pds.tableros.domain.ports.output.BoardRepository;
+
+@Service
+public class BoardServiceImpl implements BoardService {
+
+    private static final Logger log = LoggerFactory.getLogger(BoardServiceImpl.class);
+
+    private final BoardRepository boardRepository;
+
+    // Inyección por constructor del puerto de salida
+    public BoardServiceImpl(BoardRepository boardRepository) {
+        this.boardRepository = boardRepository;
+    }
+
+    @Override
+    public Optional<Board> obtenerTableroPorId(BoardId id) {
+        return this.boardRepository.findById(id);
+    }
+
+    @Override
+    public List<Board> obtenerTablerosPorUsuario(String email) {
+        return this.boardRepository.findByEmail(email);
+    }
+
+    @Override
+    public Board crearNuevoTablero(CrearBoardCommand cmd) {
+        log.info("Creando nuevo tablero '{}' para el usuario {}", cmd.titulo(), cmd.emailCreator());
+
+        // Generamos un identificador único de dominio para el nuevo tablero
+        BoardId nuevoBoardId = BoardId.generate();
+        
+        // Instanciamos el agregado pasándole los parámetros del comando
+        Board nuevoTablero = new Board(nuevoBoardId, cmd.titulo(), new Email(cmd.emailCreator()));
+
+        // Persistimos el nuevo tablero a través del puerto de salida
+        this.boardRepository.save(nuevoTablero);
+
+        return nuevoTablero;
+    }
+
+    @Override
+    public void anadirListaATablero(AnadirListCommand cmd) {
+        log.info("Añadiendo lista '{}' al tablero {}", cmd.nombreLista(), cmd.boardId());
+
+        // 1. Recuperamos el tablero
+        Board board = this.boardRepository.findById(new BoardId(cmd.boardId()))
+                .orElseThrow(() -> new IllegalArgumentException("El tablero especificado no existe"));
+
+        // 2. Le delegamos T_ODO el trabajo al agregado pasándole solo los datos del comando
+        board.addList(cmd.nombreLista(), cmd.maxCards());
+
+        // 3. Guardamos el estado
+        this.boardRepository.save(board);
+    }
+
+    @Override
+    public void definirListaCompletadas(DefinirListCompletadasCommand cmd) {
+        log.info("Configurando la lista {} como la de tareas completadas del tablero {}", cmd.listId(), cmd.boardId());
+
+        Board board = this.boardRepository.findById(new BoardId(cmd.boardId()))
+                .orElseThrow(() -> new IllegalArgumentException("El tablero especificado no existe"));
+
+        ListId listId = new ListId(cmd.listId());
+
+        // Validamos que la lista pertenezca realmente al tablero antes de marcarla
+        boolean listaExiste = board.getTasksLists().stream()
+                .anyMatch(lista -> lista.getId().equals(listId));
+
+        if (!listaExiste) {
+            throw new IllegalArgumentException("La lista especificada no pertenece a este tablero");
+        }
+
+        // Modificamos el estado del agregado
+        board.defineListCompletadas(listId);
+
+        // Sincronizamos con el repositorio
+        this.boardRepository.save(board);
+    }
+
+    @Override
+    public void cambiarEstadoBloqueo(CambiarBloqueoBoardCommand cmd) {
+        log.info("Cambiando estado de bloqueo del tablero {} a: {}", cmd.boardId(), cmd.bloquear());
+
+        Board board = this.boardRepository.findById(new BoardId(cmd.boardId()))
+                .orElseThrow(() -> new IllegalArgumentException("El tablero especificado no existe"));
+
+        // Modificamos las invariantes según venga la bandera del comando
+        if (cmd.bloquear()) {
+            board.lock();
+        } else {
+            board.unlock();
+        }
+
+        // Persistimos los cambios
+        this.boardRepository.save(board);
+    }
+}
