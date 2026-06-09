@@ -1,4 +1,4 @@
-package es.um.pds.tableros.test.arquitectura;
+package es.um.pds.tableros.arquitectura;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
