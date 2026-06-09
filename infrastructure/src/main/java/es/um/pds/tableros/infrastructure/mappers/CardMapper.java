@@ -9,6 +9,7 @@ import es.um.pds.tableros.domain.card.CardType;
 import es.um.pds.tableros.domain.card.Etiqueta;
 import es.um.pds.tableros.infrastructure.rest.dto.CardDTO;
 
+import es.um.pds.tableros.infrastructure.persistence.jpa.entity.CardEntity;
 @Component
 public class CardMapper {
 
@@ -55,6 +56,48 @@ public class CardMapper {
         
         if (dto.getChecklistItems() != null && tipo == CardType.CHECKLIST) {
             dto.getChecklistItems().forEach(card::anadirChecklistItem);
+        }
+
+        return card;
+    }
+    /**
+     * De objeto de dominio a entidad JPA.
+     */
+    public CardEntity toEntity(Card card) {
+        if (card == null) return null;
+        return new CardEntity(
+            card.getId().value(),
+            card.getBoardId().value(),
+            card.getListIdActual().value(),
+            card.getTitulo(),
+            card.getDescripcion(),
+            card.isCompletada(),
+            card.getTipo().name(),
+            new java.util.ArrayList<>(card.getChecklistItems())
+        );
+    }
+
+    /**
+     * De entidad JPA a objeto de dominio.
+     */
+    public Card toModel(CardEntity entity) {
+        if (entity == null) return null;
+
+        CardId cardId   = new CardId(entity.getId());
+        BoardId boardId = new BoardId(entity.getBoardId());
+        ListId listId   = new ListId(entity.getListIdActual());
+        CardType tipo   = CardType.valueOf(entity.getTipo().toUpperCase());
+
+        Card card = new Card(cardId, boardId, listId, entity.getTitulo(), tipo);
+
+        if (entity.isCompletada()) {
+            card.marcarCompletada();
+        }
+        if (entity.getDescripcion() != null) {
+            card.setDescripcion(entity.getDescripcion());
+        }
+        if (entity.getChecklistItems() != null && tipo == CardType.CHECKLIST) {
+            entity.getChecklistItems().forEach(card::anadirChecklistItem);
         }
 
         return card;

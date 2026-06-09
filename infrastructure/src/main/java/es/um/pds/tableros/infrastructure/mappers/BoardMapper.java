@@ -8,10 +8,18 @@ import es.um.pds.tableros.domain.board.BoardId;
 import es.um.pds.tableros.domain.board.Email;
 import es.um.pds.tableros.domain.board.TaskList;
 import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import es.um.pds.tableros.domain.board.ListId;
+import es.um.pds.tableros.infrastructure.persistence.jpa.entity.BoardEntity;
+import es.um.pds.tableros.infrastructure.persistence.jpa.entity.TaskListEntity;
 
 @Component
 public class BoardMapper {
-
+	@Autowired
+	private TaskListMapper taskListMapper;
+	
     /**
      * Transforma del Modelo del Dominio al DTO (Para enviar hacia fuera en la API REST)
      */
@@ -64,6 +72,63 @@ public class BoardMapper {
         // habitualmente se recuperan o añaden de forma controlada a través de los servicios 
         // consultando a la base de datos (JPA) para no perder los IDs reales de las listas, 
         // pero estructuralmente el objeto raíz queda mapeado aquí.
+
+        return board;
+    }
+    
+    /**
+     * De objeto de dominio a entidad JPA.
+     */
+    public BoardEntity toEntity(Board board) {
+        if (board == null) return null;
+
+        String listCompletadasId = board.getListCompletadas() != null
+                ? board.getListCompletadas().value()
+                : null;
+
+        // Creamos primero la BoardEntity sin listas (para pasársela al TaskListMapper)
+        BoardEntity boardEntity = new BoardEntity(
+            board.getId().value(),
+            board.getTitulo(),
+            board.getEmail().value(),
+            board.isLocked(),
+            listCompletadasId,
+            new java.util.ArrayList<>()
+        );
+
+        // Mapeamos cada TaskList pasándole la BoardEntity ya construida
+        List<TaskListEntity> taskListEntities = board.getTasksLists().stream()
+                .map(tl -> taskListMapper.toEntity(tl, boardEntity))
+                .collect(Collectors.toList());
+
+        boardEntity.setTasksLists(taskListEntities);
+        return boardEntity;
+    }
+
+    /**
+     * De entidad JPA a objeto de dominio (reconstrucción completa con listas).
+     */
+    public Board toModel(BoardEntity entity) {
+        if (entity == null) return null;
+
+        BoardId boardId = new BoardId(entity.getId());
+        Board board = new Board(boardId, entity.getTitulo(), new Email(entity.getEmail()));
+
+        if (entity.isLocked()) {
+            board.lock();
+        }
+
+        // Reconstruimos la lista de completadas si existe
+        if (entity.getListCompletadasId() != null) {
+            board.defineListCompletadas(new ListId(entity.getListCompletadasId()));
+        }
+
+        // Reconstruimos las TaskLists internas usando el TaskListMapper
+        if (entity.getTasksLists() != null) {
+            entity.getTasksLists().stream()
+                  .map(taskListMapper::toModel)
+                  .forEach(board::restoreTaskList);
+        }
 
         return board;
     }
