@@ -5,17 +5,9 @@ import es.um.pds.tableros.domain.board.ListId;
 import es.um.pds.tableros.domain.card.Card;
 
 public class CardMovementService {
-    
-    // Instancia única estática y privada
-    private static final CardMovementService INSTANCE = new CardMovementService();
 
-
-    private CardMovementService() {}
-
-    // Método de acceso global a la instancia
-    public static CardMovementService getInstance() {
-        return INSTANCE;
-    }
+    // Constructor vacío por defecto
+    public CardMovementService() {}
 
     /**
      * Mueve una tarjeta de lista validando las invariantes de negocio del tablero.
@@ -42,9 +34,7 @@ public class CardMovementService {
             card.marcarCompletada();
         }
 
-        String traceLog = String.format("Tarjeta [%s] movida de la lista [%s] a la lista [%s] en el tablero [%s].", 
+        return String.format("Tarjeta [%s] movida de la lista [%s] a la lista [%s] en el tablero [%s].", 
         		card.getId().value(), oldListId.value(), targetListId.value(), board.getId().value());
-        
-        return traceLog;
     }
 }
