@@ -93,6 +93,14 @@ public class Board {
 			            .ifPresent(lista -> lista.incrementaCards());
     }
     
+    /**
+     * Método de reconstrucción para uso exclusivo del mapper/repositorio.
+     * No aplica reglas de negocio (no comprueba isLocked, no genera ID).
+     */
+    public void restoreTaskList(TaskList taskList) {
+        this.tasksLists.add(taskList);
+    }
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) {

@@ -48,6 +48,11 @@ public class Card {
     public CardType getTipo() { 
     	return tipo; 
     }
+    
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+    
     public boolean isCompletada() { 
     	return isCompletada; 
     }
