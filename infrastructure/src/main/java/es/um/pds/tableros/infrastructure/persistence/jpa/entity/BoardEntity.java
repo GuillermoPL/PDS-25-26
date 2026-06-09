@@ -1,0 +1,74 @@
+package es.um.pds.tableros.infrastructure.persistence.jpa.entity;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "BOARD")
+public class BoardEntity {
+
+    @Id
+    @Column(name = "ID", nullable = false) // Obligatorio por ser Clave Primaria
+    private String id;
+
+    @Column(name = "TITULO", nullable = false) // El título no puede ser nulo
+    private String titulo;
+
+    @Column(name = "EMAIL_DUEÑO", nullable = false) // El dueño es obligatorio
+    private String email;
+
+    @Column(name = "IS_LOCKED", nullable = false)
+    private boolean isLocked;
+
+    @Column(name = "LIST_COMPLETADAS_ID", nullable = true) // Puede ser nulo si no se ha definido aún
+    private String listCompletadasId;
+
+    @OneToMany(mappedBy = "board")
+    private List<TaskListEntity> tasksLists = new ArrayList<>();
+
+    public BoardEntity() {}
+
+    public BoardEntity(String id, String titulo, String email, boolean isLocked, 
+                       String listCompletadasId, List<TaskListEntity> tasksLists) {
+        this.id = id;
+        this.titulo = titulo;
+        this.email = email;
+        this.isLocked = isLocked;
+        this.listCompletadasId = listCompletadasId;
+        this.tasksLists = tasksLists;
+    }
+
+    // Getters y Setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    public String getTitulo() { return titulo; }
+    public void setTitulo(String titulo) { this.titulo = titulo; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public boolean isLocked() { return isLocked; }
+    public void setLocked(boolean locked) { this.isLocked = locked; }
+    public String getListCompletadasId() { return listCompletadasId; }
+    public void setListCompletadasId(String listCompletadasId) { this.listCompletadasId = listCompletadasId; }
+    public List<TaskListEntity> getTasksLists() { return tasksLists; }
+    public void setTasksLists(List<TaskListEntity> tasksLists) { this.tasksLists = tasksLists; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BoardEntity)) return false;
+        BoardEntity other = (BoardEntity) o;
+        return Objects.equals(id, other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+}
