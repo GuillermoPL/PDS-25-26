@@ -60,6 +60,7 @@ public class BoardViewController {
     private boolean estadoBloqueoActual;
     private String  filtroNombreActual = SIN_FILTRO_NOMBRE;
     private String  filtroColorActual  = SIN_FILTRO_COLOR;
+    private String listCompletadasId;
 
     // ── Constructor ───────────────────────────────────────────────────────────
     public BoardViewController(BoardService boardService, CardService cardService,
@@ -96,6 +97,8 @@ public class BoardViewController {
         this.estadoBloqueoActual = tablero.isLocked();
         btnBloqueo.setText(this.estadoBloqueoActual ? "Desbloquear 🔓" : "Bloquear 🔒");
 
+        this.listCompletadasId = tablero.getListCompletadasId();
+
         actualizarComboNombre(todasLasTarjetas);
         actualizarComboColor(todasLasTarjetas);
 
@@ -109,8 +112,11 @@ public class BoardViewController {
                     .filter(c -> listaInfo.getId().equals(c.getListIdActual()))
                     .toList();
 
+            boolean esListaCompletadas = listaInfo.getId().equals(this.listCompletadasId);
+
             hboxColumnas.getChildren().add(
-                crearColumnaVisual(listaInfo.getId(), listaInfo.getNombre(), tarjetasDeEstaLista));
+                crearColumnaVisual(listaInfo.getId(), listaInfo.getNombre(),
+                                   tarjetasDeEstaLista, esListaCompletadas));
         }
     }
 
@@ -245,81 +251,125 @@ public class BoardViewController {
     }
 
     // ── Construcción de columnas ───────────────────────────────────────────────
-    private VBox crearColumnaVisual(String listId, String nombreLista, List<CardDTO> tarjetas) {
-        VBox columna = new VBox(8);
-        columna.setPrefWidth(250);
-        columna.setStyle("-fx-background-color: #ebecf0; -fx-background-radius: 5; -fx-padding: 10;");
+    private VBox crearColumnaVisual(String listId, String nombreLista, List<CardDTO> tarjetas, boolean esListaCompletadas) {
+    	VBox columna = new VBox(8);
+    	columna.setPrefWidth(250);
+	
 
-        Label lblTitulo = new Label(nombreLista + " (" + tarjetas.size() + ")");
-        lblTitulo.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 0 0 6 0; -fx-text-fill: #333333;");
-        columna.getChildren().add(lblTitulo);
-
-        VBox contenedorTarjetas = new VBox(8);
-        contenedorTarjetas.setPadding(new Insets(4, 0, 4, 0));
-        tarjetas.forEach(t -> contenedorTarjetas.getChildren().add(crearTarjetaVisual(t)));
-        columna.getChildren().add(contenedorTarjetas);
-
-        Button btnAnadirTarjeta = new Button("+ Añadir tarjeta");
-        btnAnadirTarjeta.setMaxWidth(Double.MAX_VALUE);
-        btnAnadirTarjeta.setStyle("-fx-background-color: rgba(0,0,0,0.08); -fx-cursor: hand;");
-        btnAnadirTarjeta.setDisable(this.estadoBloqueoActual);
-        btnAnadirTarjeta.setOnAction(e -> abrirDialogoNuevaTarjeta(listId));
-        columna.getChildren().add(btnAnadirTarjeta);
-
-        columna.setOnDragOver(event -> {
-            if (event.getGestureSource() != columna && event.getDragboard().hasString()) {
-                event.acceptTransferModes(TransferMode.MOVE);
-            }
-            event.consume();
-        });
-
-        columna.setOnDragDropped(event -> {
-            Dragboard db = event.getDragboard();
-            boolean exito = false;
-            if (db.hasString()) {
-                String cardIdVolando = db.getString();
-                try {
-                    MoverCardCommand cmd = new MoverCardCommand(cardIdVolando, boardIdActual, listId);
-                    cardService.moverTarjeta(cmd);
-                    exito = true;
-                    renderizarTodo();
-                } catch (IllegalArgumentException | IllegalStateException e) {
-                    mostrarAlertaRegla(e.getMessage());
-                }
-            }
-            event.setDropCompleted(exito);
-            event.consume();
-        });
-
-        return columna;
-    }
+		if (esListaCompletadas) {
+			columna.setStyle(
+			"-fx-background-color: #d5f5e3; -fx-background-radius: 5; -fx-padding: 10; " +
+			"-fx-border-color: #27ae60; -fx-border-radius: 5; -fx-border-width: 1.5;");
+		} else {
+			columna.setStyle(
+			"-fx-background-color: #ebecf0; -fx-background-radius: 5; -fx-padding: 10;");
+		}
+		
+		String tituloTexto = esListaCompletadas
+							? "✅ " + nombreLista + " (" + tarjetas.size() + ")"
+							: nombreLista + " (" + tarjetas.size() + ")";
+		
+		Label lblTitulo = new Label(tituloTexto);
+		lblTitulo.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; " +
+							"-fx-padding: 0 0 6 0; -fx-text-fill: #333333;");
+		columna.getChildren().add(lblTitulo);
+		
+		VBox contenedorTarjetas = new VBox(8);
+		contenedorTarjetas.setPadding(new Insets(4, 0, 4, 0));
+		tarjetas.forEach(t -> contenedorTarjetas.getChildren().add(crearTarjetaVisual(t)));
+		columna.getChildren().add(contenedorTarjetas);
+		
+		Button btnAnadirTarjeta = new Button("+ Añadir tarjeta");
+		btnAnadirTarjeta.setMaxWidth(Double.MAX_VALUE);
+		btnAnadirTarjeta.setStyle("-fx-background-color: rgba(0,0,0,0.08); -fx-cursor: hand;");
+		btnAnadirTarjeta.setDisable(this.estadoBloqueoActual);
+		btnAnadirTarjeta.setOnAction(e -> abrirDialogoNuevaTarjeta(listId));
+		columna.getChildren().add(btnAnadirTarjeta);
+		
+		columna.setOnDragOver(event -> {
+			if (event.getGestureSource() != columna && event.getDragboard().hasString()) {
+				event.acceptTransferModes(TransferMode.MOVE);
+			}
+			event.consume();
+		});
+		
+		columna.setOnDragDropped(event -> {
+			Dragboard db = event.getDragboard();
+			boolean exito = false;
+			if (db.hasString()) {
+				String cardIdVolando = db.getString();
+				try {
+					MoverCardCommand cmd = new MoverCardCommand(cardIdVolando, boardIdActual, listId);
+					cardService.moverTarjeta(cmd);
+					exito = true;
+					renderizarTodo();
+				} catch (IllegalArgumentException | IllegalStateException e) {
+					mostrarAlertaRegla(e.getMessage());
+				}
+			}
+			event.setDropCompleted(exito);
+			event.consume();
+		});
+		
+		return columna;
+	}
 
     private VBox crearTarjetaVisual(CardDTO tarjeta) {
         VBox tarjetaVisual = new VBox(4);
-        tarjetaVisual.setStyle(
-            "-fx-background-color: white; -fx-padding: 10; -fx-background-radius: 4; " +
-            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 2, 0, 0, 1); -fx-cursor: hand;");
 
-        String iconoTipo = "CHECKLIST".equals(tarjeta.getTipo()) ? "☑ " : "✔ ";
+        if (tarjeta.isCompletada()) {
+            tarjetaVisual.setStyle(
+                "-fx-background-color: #eafaf1; -fx-padding: 10; -fx-background-radius: 4; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 2, 0, 0, 1); " +
+                "-fx-cursor: hand; -fx-border-color: #27ae60; " +
+                "-fx-border-radius: 4; -fx-border-width: 1.5;");
+        } else {
+            tarjetaVisual.setStyle(
+                "-fx-background-color: white; -fx-padding: 10; -fx-background-radius: 4; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 2, 0, 0, 1); " +
+                "-fx-cursor: hand;");
+        }
+
+        String iconoTipo;
+        if (tarjeta.isCompletada()) {
+            iconoTipo = "✅ ";
+        } else if ("CHECKLIST".equals(tarjeta.getTipo())) {
+            iconoTipo = "☑ ";
+        } else {
+            iconoTipo = "📋 ";
+        }
+
         Label lblTitulo = new Label(iconoTipo + tarjeta.getTitulo());
-        lblTitulo.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #333333;");
+
+        if (tarjeta.isCompletada()) {
+            lblTitulo.setStyle(
+                "-fx-font-size: 12px; -fx-font-weight: bold; " +
+                "-fx-text-fill: #888888; -fx-strikethrough: true;");
+        } else {
+            lblTitulo.setStyle(
+                "-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #333333;");
+        }
+
         lblTitulo.setWrapText(true);
         tarjetaVisual.getChildren().add(lblTitulo);
 
-        if ("CHECKLIST".equals(tarjeta.getTipo()) && tarjeta.getChecklistItems() != null && !tarjeta.getChecklistItems().isEmpty()) {
+        // Checklist items
+        if ("CHECKLIST".equals(tarjeta.getTipo())
+                && tarjeta.getChecklistItems() != null
+                && !tarjeta.getChecklistItems().isEmpty()) {
             VBox contenedorChecklist = new VBox(3);
-            contenedorChecklist.setPadding(new Insets(4, 0, 4, 12)); 
-            
+            contenedorChecklist.setPadding(new Insets(4, 0, 4, 12));
             for (String paso : tarjeta.getChecklistItems()) {
                 CheckBox chkPaso = new CheckBox(paso);
                 chkPaso.setStyle("-fx-font-size: 11px; -fx-text-fill: #555555;");
-                chkPaso.setDisable(true); 
-                chkPaso.setOpacity(0.85); 
+                chkPaso.setDisable(true);
+                chkPaso.setOpacity(0.85);
                 contenedorChecklist.getChildren().add(chkPaso);
             }
             tarjetaVisual.getChildren().add(contenedorChecklist);
         }
 
+        // Etiquetas
         if (tarjeta.getEtiquetas() != null && !tarjeta.getEtiquetas().isEmpty()) {
             HBox chips = new HBox(4);
             tarjeta.getEtiquetas().forEach(et -> {
@@ -335,8 +385,26 @@ public class BoardViewController {
 
         if (tarjeta.isCompletada()) {
             Label badge = new Label("✓ Completada");
-            badge.setStyle("-fx-text-fill: #27ae60; -fx-font-size: 10px; -fx-font-weight: bold;");
+            badge.setStyle(
+                "-fx-text-fill: #27ae60; -fx-font-size: 10px; -fx-font-weight: bold;");
             tarjetaVisual.getChildren().add(badge);
+        }
+
+        if (!tarjeta.isCompletada() && listCompletadasId != null) {
+            Button btnCompletar = new Button("✓ Completar");
+            btnCompletar.setStyle(
+                "-fx-background-color: #27ae60; -fx-text-fill: white; " +
+                "-fx-font-size: 10px; -fx-padding: 3 8 3 8; " +
+                "-fx-background-radius: 4; -fx-cursor: hand;");
+            btnCompletar.setOnAction(e -> {
+                MoverCardCommand cmd = new MoverCardCommand(
+                    tarjeta.getId(), boardIdActual, listCompletadasId);
+                cardService.moverTarjeta(cmd);
+                renderizarTodo();
+                e.consume(); // evita que el click active el drag
+            });
+            btnCompletar.setOnDragDetected(javafx.event.Event::consume);
+            tarjetaVisual.getChildren().add(btnCompletar);
         }
 
         tarjetaVisual.setOnDragDetected(event -> {
@@ -386,6 +454,30 @@ public class BoardViewController {
             renderizarTodo();
         } catch (IOException e) {
             mostrarAlertaError("Error al abrir diálogo", e.getMessage());
+        }
+    }
+    
+    @FXML
+    public void handleAjustesTablero() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/DefinirCompletadas.fxml"));
+            loader.setControllerFactory(springContext::getBean);
+            Parent root = loader.load();
+            
+            DefinirCompletadasController ctrl = loader.getController();
+            ctrl.setBoardId(this.boardIdActual);
+            
+            Stage dialog = new Stage();
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.initOwner(obtenerVentanaPrincipal());
+            dialog.setTitle("Ajustes del Tablero");
+            dialog.setScene(new Scene(root));
+            
+            dialog.showAndWait(); 
+            renderizarTodo(); 
+            
+        } catch (IOException e) {
+            mostrarAlertaError("Error al abrir ajustes", e.getMessage());
         }
     }
 
