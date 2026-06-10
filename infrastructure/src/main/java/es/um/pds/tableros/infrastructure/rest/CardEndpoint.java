@@ -53,7 +53,8 @@ public class CardEndpoint {
                 dto.getBoardId(), 
                 dto.getListIdActual(), 
                 dto.getTitulo(), 
-                dto.getTipo()
+                dto.getTipo(),
+                null
             );
             Card nuevaTarjeta = cardService.crearNuevaTarjeta(cmd);
             return ResponseEntity.status(HttpStatus.CREATED).body(cardMapper.toDTO(nuevaTarjeta));

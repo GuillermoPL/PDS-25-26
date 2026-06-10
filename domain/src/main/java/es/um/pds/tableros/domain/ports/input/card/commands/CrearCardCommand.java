@@ -5,5 +5,6 @@ public record CrearCardCommand(
     String boardId,
     String listId,
     String titulo,
-    String tipo // "TASK" o "CHECKLIST"
+    String tipo, // "TASK" o "CHECKLIST"
+    String nombreEtiqueta
 ) {}

@@ -22,7 +22,7 @@ import es.um.pds.tableros.domain.ports.output.CardRepository;
 import es.um.pds.tableros.domain.ports.output.BoardRepository; 
 
 import es.um.pds.tableros.domain.services.CardMovementService;
-
+import es.um.pds.tableros.domain.card.Etiqueta;
 @Service
 public class CardServiceImpl implements CardService {
 
@@ -72,6 +72,12 @@ public class CardServiceImpl implements CardService {
         
         Card nuevaTarjeta = new Card(nuevoCardId, bId, lId, cmd.titulo(), tipo);
 
+        if (cmd.nombreEtiqueta() != null) {
+            // El requisito dice que la etiqueta tiene nombre y color. 
+            // Ponemos un color azul genérico por defecto
+            nuevaTarjeta.anadirEtiqueta(new Etiqueta(cmd.nombreEtiqueta(), "#3498db"));
+        }
+        
         // 4. Persistir a través del puerto de salida e incrementar contador del tablero
         this.cardRepository.save(nuevaTarjeta);
         board.registrarMovimientoTarjeta(null, lId); // Al ser nueva, origen es null

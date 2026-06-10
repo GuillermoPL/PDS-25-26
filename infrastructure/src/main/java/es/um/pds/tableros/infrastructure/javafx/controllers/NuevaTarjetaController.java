@@ -32,7 +32,8 @@ public class NuevaTarjetaController implements Initializable {
     // ── Nodos FXML ─────────────────────────────────────────────────────────────
     @FXML private TextField  txtTitulo;
     @FXML private ChoiceBox<CardType> cbTipo;
-
+    @FXML private TextField txtEtiqueta;
+    
     // ── Contexto asignado por el padre antes de showAndWait() ─────────────────
     private String boardId;
     private String listId;
@@ -73,14 +74,16 @@ public class NuevaTarjetaController implements Initializable {
             txtTitulo.requestFocus();
             return;
         }
-
+        String textoEtiqueta = txtEtiqueta.getText().trim();
+        String nombreEtiqueta = textoEtiqueta.isEmpty() ? null : textoEtiqueta;
         try {
-            CrearCardCommand cmd = new CrearCardCommand(
-                boardId,
-                listId,
-                titulo,
-                cbTipo.getValue().name() // CardType enum → "TASK" o "CHECKLIST"
-            );
+        	CrearCardCommand cmd = new CrearCardCommand(
+                    boardId,
+                    listId,
+                    titulo,
+                    cbTipo.getValue().name(),
+                    nombreEtiqueta 
+                );
             cardService.crearNuevaTarjeta(cmd);
             cerrarVentana();
 

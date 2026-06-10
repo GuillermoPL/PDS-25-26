@@ -30,13 +30,16 @@
     <!-- Título -->
     <Label text="Título *"/>
     <TextField fx:id="txtTitulo" promptText="Ej: Implementar login, Revisar PR..."/>
-
+	
     <!-- Tipo de tarjeta -->
     <HBox spacing="10.0" alignment="CENTER_LEFT">
         <Label text="Tipo:"/>
         <ChoiceBox fx:id="cbTipo"/>
     </HBox>
-
+    
+	<Label text="Etiqueta (opcional):"/>
+	<TextField fx:id="txtEtiqueta" promptText="Ej: Urgente, Frontend, Bug..."/>
+	
     <!-- Botones -->
     <HBox spacing="10.0" alignment="CENTER_RIGHT">
         <Button text="Cancelar" onAction="#handleCancelar"
