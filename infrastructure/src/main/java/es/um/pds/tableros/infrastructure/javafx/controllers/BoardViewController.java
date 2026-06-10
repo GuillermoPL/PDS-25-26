@@ -134,7 +134,7 @@ public class BoardViewController {
 
         // Cabecera con nombre y contador
         Label lblTitulo = new Label(nombreLista + " (" + tarjetas.size() + ")");
-        lblTitulo.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 0 0 6 0;");
+        lblTitulo.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 0 0 6 0; -fx-text-fill: #333333;");
         columna.getChildren().add(lblTitulo);
 
         // Contenedor interno de tarjetas (es el destino real del drop)
@@ -193,7 +193,7 @@ public class BoardViewController {
         // Tipo (icono) + título
         String iconoTipo = "CHECKLIST".equals(tarjeta.getTipo()) ? "☑ " : "✔ ";
         Label lblTitulo = new Label(iconoTipo + tarjeta.getTitulo());
-        lblTitulo.setStyle("-fx-font-size: 12px;");
+        lblTitulo.setStyle("-fx-font-size: 12px; -fx-text-fill: #333333;");
         lblTitulo.setWrapText(true);
         tarjetaVisual.getChildren().add(lblTitulo);
 
