@@ -27,7 +27,15 @@ public class DashboardController {
         this.boardMapper = boardMapper;
         this.sceneManager = sceneManager;
     }
-    
+    @FXML
+    public void initialize() {
+        // Al volver al Dashboard, comprobamos si ya hay un email guardado en la sesión
+        String emailGuardado = sceneManager.getCurrentUserEmail();
+        if (emailGuardado != null && !emailGuardado.isBlank()) {
+            txtEmail.setText(emailGuardado);
+            handleCargarTableros(); // Cargamos los tableros automáticamente
+        }
+    }
     @FXML
     public void handleCrearTablero() {
         String email = txtEmail.getText();
@@ -41,7 +49,7 @@ public class DashboardController {
             alert.showAndWait();
             return;
         }
-
+        sceneManager.setCurrentUserEmail(email);
         // 2. Abrimos un cuadro de diálogo flotante para pedir el título del tablero
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Nuevo Tablero");
@@ -86,7 +94,7 @@ public class DashboardController {
                 alert.showAndWait();
                 return;
             }
-            
+            sceneManager.setCurrentUserEmail(email);
             // La vista solo llama al puerto de entrada de la aplicación
             tablerosCargados = boardService.obtenerTablerosPorUsuario(email).stream()
                     .map(boardMapper::toDTO)

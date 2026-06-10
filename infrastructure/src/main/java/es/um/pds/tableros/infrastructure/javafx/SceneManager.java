@@ -15,10 +15,19 @@ public class SceneManager {
 
     private final ApplicationContext springContext;
     private Stage primaryStage;
+    private String currentUserEmail;
 
     // Inyectamos el contexto global de Spring para poder recuperar los Beans
     public SceneManager(ApplicationContext springContext) {
         this.springContext = springContext;
+    }
+    
+    public String getCurrentUserEmail() {
+        return currentUserEmail;
+    }
+
+    public void setCurrentUserEmail(String currentUserEmail) {
+        this.currentUserEmail = currentUserEmail;
     }
 
     /**
