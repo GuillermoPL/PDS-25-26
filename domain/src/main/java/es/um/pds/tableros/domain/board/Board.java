@@ -84,6 +84,22 @@ public class Board {
     }
     
     /**
+     * Verifica si se puede mover una tarjeta a una lista destino.
+     * A diferencia de verificaAnadirCard, este método PERMITE el movimiento 
+     * aunque el tablero esté bloqueado, pero sigue respetando el límite de la lista.
+     */
+    public void verificaMoverCard(ListId targetListId) {
+        TaskList targetList = tasksLists.stream()
+                .filter(l -> l.getId().equals(targetListId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("La lista de destino no pertenece a este tablero"));
+
+        if (targetList.alcanzaLimite()) {
+            throw new IllegalStateException("La lista '" + targetList.getNombre() + "' ha alcanzado su límite máximo de tarjetas");
+        }
+    }
+    
+    /**
      * Actualiza los contadores de las listas internas cuando una tarjeta se mueve.
      */
     public void registrarMovimientoTarjeta(ListId listaOrigenId, ListId listaDestinoId) {

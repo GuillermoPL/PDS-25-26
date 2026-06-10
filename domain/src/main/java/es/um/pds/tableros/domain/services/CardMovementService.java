@@ -19,7 +19,7 @@ public class CardMovementService {
         }
         
         // Verificamos que podemos mover la tarjeta a la lista (límite de tarjetas en la lista)
-        board.verificaAnadirCard(targetListId);
+        board.verificaMoverCard(targetListId);
 
         ListId oldListId = card.getListIdActual();
 
