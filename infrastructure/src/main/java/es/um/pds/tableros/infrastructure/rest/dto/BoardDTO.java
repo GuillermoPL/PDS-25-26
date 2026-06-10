@@ -10,7 +10,8 @@ public class BoardDTO {
     private List<String> nombresListas; // Enviamos solo datos planos al exterior
     private String listCompletadasId;
     private List<String> historial;
-
+    private List<ListaDTO> listas;
+    
     // Constructor vacío obligatorio para Jackson (JSON)
     public BoardDTO() {}
 
@@ -35,4 +36,25 @@ public class BoardDTO {
     
     public List<String> getHistorial() { return historial; }
     public void setHistorial(List<String> historial) { this.historial = historial; }
+    
+    public List<ListaDTO> getListas() { return listas; }
+    public void setListas(List<ListaDTO> listas) { this.listas = listas; }
+    
+    public static class ListaDTO {
+        private String id;
+        private String nombre;
+
+        public ListaDTO() {}
+        
+        public ListaDTO(String id, String nombre) {
+            this.id = id;
+            this.nombre = nombre;
+        }
+
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
+        public String getNombre() { return nombre; }
+        public void setNombre(String nombre) { this.nombre = nombre; }
+    }
+    
 }
