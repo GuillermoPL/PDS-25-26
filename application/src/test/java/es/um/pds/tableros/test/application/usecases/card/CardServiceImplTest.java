@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -52,7 +53,7 @@ class CardServiceImplTest {
 
         when(boardRepository.findById(new BoardId("b1"))).thenReturn(Optional.of(boardSimulado));
 
-        // null en el último parámetro = sin etiqueta (campo opcional)
+        // null en el último parámetro = sin ítems de checklist
         CrearCardCommand cmd = new CrearCardCommand("b1", validListId, "Nueva Tarea", "TASK", null, null);
 
         // 2. Ejecutamos
@@ -77,9 +78,9 @@ class CardServiceImplTest {
 
         when(boardRepository.findById(new BoardId("b1"))).thenReturn(Optional.of(boardSimulado));
 
-        // Creamos la Etiqueta del dominio directamente, igual que hace el controlador JavaFX
+        // Creamos la Etiqueta del dominio directamente y pasamos null como 6º parámetro
         Etiqueta etiqueta = new Etiqueta("Urgente", "#ff0000");
-        CrearCardCommand cmd = new CrearCardCommand("b1", validListId, "Nueva Tarea", "TASK", etiqueta);
+        CrearCardCommand cmd = new CrearCardCommand("b1", validListId, "Nueva Tarea", "TASK", etiqueta, null);
 
         // 2. Ejecutamos
         Card nuevaTarjeta = cardService.crearNuevaTarjeta(cmd);
@@ -89,6 +90,32 @@ class CardServiceImplTest {
         assertEquals(1, nuevaTarjeta.getEtiquetas().size());
         assertEquals("Urgente", nuevaTarjeta.getEtiquetas().get(0).nombre());
         assertEquals("#ff0000", nuevaTarjeta.getEtiquetas().get(0).color());
+
+        verify(cardRepository, times(1)).save(any(Card.class));
+        verify(boardRepository, times(1)).save(boardSimulado);
+    }
+
+    @Test
+    void testCrearNuevaTarjetaChecklist() {
+        // 1. Tablero real con una lista válida
+        Board boardSimulado = new Board(new BoardId("b1"), "Tablero", new Email("test@um.es"));
+        boardSimulado.addList("To Do", 10);
+        String validListId = boardSimulado.getTasksLists().get(0).getId().value();
+
+        when(boardRepository.findById(new BoardId("b1"))).thenReturn(Optional.of(boardSimulado));
+
+        // Preparamos los pasos del checklist
+        List<String> pasos = List.of("Paso 1", "Paso 2");
+        CrearCardCommand cmd = new CrearCardCommand("b1", validListId, "Revisión", "CHECKLIST", null, pasos);
+
+        // 2. Ejecutamos
+        Card nuevaTarjeta = cardService.crearNuevaTarjeta(cmd);
+
+        // 3. Verificamos que se hayan guardado los pasos correctamente en el dominio
+        assertEquals("Revisión", nuevaTarjeta.getTitulo());
+        assertEquals(CardType.CHECKLIST, nuevaTarjeta.getTipo());
+        assertEquals(2, nuevaTarjeta.getChecklistItems().size());
+        assertEquals("Paso 1", nuevaTarjeta.getChecklistItems().get(0));
 
         verify(cardRepository, times(1)).save(any(Card.class));
         verify(boardRepository, times(1)).save(boardSimulado);
