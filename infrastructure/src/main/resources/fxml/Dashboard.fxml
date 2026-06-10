@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="CENTER" spacing="15.0" prefWidth="400.0" prefHeight="500.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="es.um.pds.tableros.infrastructure.javafx.controllers.DashboardController">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+    </padding>
+
+    <Label text="Mis Tableros Kanban">
+        <font>
+            <Font name="System Bold" size="20.0"/>
+        </font>
+    </Label>
+
+    <HBox spacing="10.0" alignment="CENTER">
+        <TextField fx:id="txtEmail" promptText="Introduce tu email..." HBox.hgrow="ALWAYS"/>
+        <Button text="Buscar" onAction="#handleCargarTableros"/>
+    </HBox>
+
+    <ListView fx:id="listTableros" VBox.vgrow="ALWAYS" onMouseClicked="#handleSeleccionarTablero"/>
+
+    <Button fx:id="btnCrearTablero" text="+ Crear Nuevo Tablero" onAction="#handleCrearTablero" maxWidth="Infinity" style="-fx-background-color: #0079bf; -fx-text-fill: white; -fx-font-weight: bold;"/>
+</VBox>

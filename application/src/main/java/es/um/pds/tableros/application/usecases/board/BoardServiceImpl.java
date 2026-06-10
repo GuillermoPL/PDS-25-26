@@ -36,8 +36,13 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public List<Board> obtenerTablerosPorUsuario(String email) {
-        return this.boardRepository.findByEmail(email);
+    public List<Board> obtenerTablerosPorUsuario(String emailRaw) {
+        // 1. La capa de aplicación transforma el String crudo al Value Object del Dominio
+        // Si el formato es incorrecto, el dominio lanzará la IllegalArgumentException AQUÍ
+        Email emailValidado = new Email(emailRaw);
+
+        // 2. Si pasa la validación, procedemos a consultar el puerto de salida
+        return this.boardRepository.findByEmail(emailValidado.value());
     }
 
     @Override

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #0079bf;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="es.um.pds.tableros.infrastructure.javafx.controllers.BoardViewController">
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20.0" style="-fx-background-color: rgba(0,0,0,0.2);">
+            <padding>
+                <Insets bottom="10.0" left="15.0" right="15.0" top="10.0"/>
+            </padding>
+            <Label fx:id="lblTituloTablero" text="Cargando Tablero..." textFill="white">
+                <font>
+                    <Font name="System Bold" size="18.0"/>
+                </font>
+            </Label>
+            <Button fx:id="btnBloqueo" text="Bloquear" onAction="#handleAlternarBloqueo"/>
+            <HBox HBox.hgrow="ALWAYS" alignment="CENTER_RIGHT">
+                <Button text="+ Añadir Lista" onAction="#handleAnadirListaVentana" style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white;"/>
+            </HBox>
+        </HBox>
+    </top>
+    <center>
+        <ScrollPane fitToHeight="true" style="-fx-background-color: transparent; -fx-background: transparent;" vbarPolicy="NEVER" hbarPolicy="AS_NEEDED">
+            <content>
+                <HBox fx:id="hboxColumnas" spacing="15.0">
+                    <padding>
+                        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>
+                    </padding>
+                </HBox>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>
