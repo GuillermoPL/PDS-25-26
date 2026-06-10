@@ -1,4 +1,6 @@
 package es.um.pds.tableros.domain.ports.input.card.commands;
+import es.um.pds.tableros.domain.card.Etiqueta;
+
 
 // Comando para crear una tarjeta (Necesita el título, tipo y dónde va a caer)
 public record CrearCardCommand(
@@ -6,5 +8,5 @@ public record CrearCardCommand(
     String listId,
     String titulo,
     String tipo, // "TASK" o "CHECKLIST"
-    String nombreEtiqueta
+    Etiqueta etiqueta  // null si no se añade etiqueta
 ) {}

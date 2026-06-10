@@ -2,6 +2,7 @@ package es.um.pds.tableros.test.application.usecases.card;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.util.Optional;
@@ -20,6 +21,7 @@ import es.um.pds.tableros.domain.board.ListId;
 import es.um.pds.tableros.domain.card.Card;
 import es.um.pds.tableros.domain.card.CardId;
 import es.um.pds.tableros.domain.card.CardType;
+import es.um.pds.tableros.domain.card.Etiqueta;
 import es.um.pds.tableros.domain.ports.input.card.commands.CrearCardCommand;
 import es.um.pds.tableros.domain.ports.input.card.commands.MoverCardCommand;
 import es.um.pds.tableros.domain.ports.output.BoardRepository;
@@ -42,39 +44,64 @@ class CardServiceImplTest {
     private CardServiceImpl cardService;
 
     @Test
-    void testCrearNuevaTarjeta() {
-        // 1. Creamos un tablero real válido para que pase las reglas de negocio
+    void testCrearNuevaTarjetaSinEtiqueta() {
+        // 1. Tablero real con una lista válida
         Board boardSimulado = new Board(new BoardId("b1"), "Tablero", new Email("test@um.es"));
         boardSimulado.addList("To Do", 10);
-        
-        // Obtenemos el ID real generado de la lista para usarlo en el comando
         String validListId = boardSimulado.getTasksLists().get(0).getId().value();
+
         when(boardRepository.findById(new BoardId("b1"))).thenReturn(Optional.of(boardSimulado));
 
-        CrearCardCommand cmd = new CrearCardCommand("b1", validListId, "Nueva Tarea", "TASK", "Urgente");
+        // null en el último parámetro = sin etiqueta (campo opcional)
+        CrearCardCommand cmd = new CrearCardCommand("b1", validListId, "Nueva Tarea", "TASK", null);
+
         // 2. Ejecutamos
         Card nuevaTarjeta = cardService.crearNuevaTarjeta(cmd);
 
-        // 3. Comprobamos el estado del objeto creado
+        // 3. Verificamos estado
         assertEquals("Nueva Tarea", nuevaTarjeta.getTitulo());
         assertEquals(CardType.TASK, nuevaTarjeta.getTipo());
         assertEquals(validListId, nuevaTarjeta.getListIdActual().value());
+        assertTrue(nuevaTarjeta.getEtiquetas().isEmpty());
 
-        // Comprobamos que el servicio guardó tanto la tarjeta como el tablero (porque se actualizó su contador)
+        verify(cardRepository, times(1)).save(any(Card.class));
+        verify(boardRepository, times(1)).save(boardSimulado);
+    }
+
+    @Test
+    void testCrearNuevaTarjetaConEtiqueta() {
+        // 1. Tablero real con una lista válida
+        Board boardSimulado = new Board(new BoardId("b1"), "Tablero", new Email("test@um.es"));
+        boardSimulado.addList("To Do", 10);
+        String validListId = boardSimulado.getTasksLists().get(0).getId().value();
+
+        when(boardRepository.findById(new BoardId("b1"))).thenReturn(Optional.of(boardSimulado));
+
+        // Creamos la Etiqueta del dominio directamente, igual que hace el controlador JavaFX
+        Etiqueta etiqueta = new Etiqueta("Urgente", "#ff0000");
+        CrearCardCommand cmd = new CrearCardCommand("b1", validListId, "Nueva Tarea", "TASK", etiqueta);
+
+        // 2. Ejecutamos
+        Card nuevaTarjeta = cardService.crearNuevaTarjeta(cmd);
+
+        // 3. Verificamos que la etiqueta se añadió correctamente
+        assertEquals("Nueva Tarea", nuevaTarjeta.getTitulo());
+        assertEquals(1, nuevaTarjeta.getEtiquetas().size());
+        assertEquals("Urgente", nuevaTarjeta.getEtiquetas().get(0).nombre());
+        assertEquals("#ff0000", nuevaTarjeta.getEtiquetas().get(0).color());
+
         verify(cardRepository, times(1)).save(any(Card.class));
         verify(boardRepository, times(1)).save(boardSimulado);
     }
 
     @Test
     void testMoverTarjetaDelegaAlServicioDeDominioYGuarda() {
-        // 1. Configuramos los mocks de búsqueda
+        // 1. Configuramos los mocks
         Card cardSimulada = new Card(new CardId("c1"), new BoardId("b1"), new ListId("l1"), "Tarea", CardType.TASK);
         Board boardSimulado = new Board(new BoardId("b1"), "Tablero", new Email("t@um.es"));
-        
+
         when(cardRepository.findById(new CardId("c1"))).thenReturn(Optional.of(cardSimulada));
         when(boardRepository.findById(new BoardId("b1"))).thenReturn(Optional.of(boardSimulado));
-        
-        // Simulamos que el Servicio de Dominio nos devuelve un log de traza sin hacer nada más
         when(cardMovementService.moveCard(eq(cardSimulada), eq(boardSimulado), any(ListId.class)))
             .thenReturn("Traza de prueba");
 
@@ -83,11 +110,8 @@ class CardServiceImplTest {
         // 2. Ejecutamos
         cardService.moverTarjeta(cmd);
 
-        // 3. Comprobamos que el servicio de aplicación coordinó todo
-        // Nos aseguramos de que llamó al servicio de dominio
+        // 3. Verificamos coordinación
         verify(cardMovementService, times(1)).moveCard(eq(cardSimulada), eq(boardSimulado), eq(new ListId("l2")));
-        
-        // Nos aseguramos de que guardó los cambios de ambos agregados
         verify(cardRepository, times(1)).save(cardSimulada);
         verify(boardRepository, times(1)).save(boardSimulado);
     }

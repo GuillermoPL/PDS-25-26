@@ -72,10 +72,10 @@ public class CardServiceImpl implements CardService {
         
         Card nuevaTarjeta = new Card(nuevoCardId, bId, lId, cmd.titulo(), tipo);
 
-        if (cmd.nombreEtiqueta() != null) {
+        if (cmd.etiqueta() != null) {
             // El requisito dice que la etiqueta tiene nombre y color. 
             // Ponemos un color azul genérico por defecto
-            nuevaTarjeta.anadirEtiqueta(new Etiqueta(cmd.nombreEtiqueta(), "#3498db"));
+            nuevaTarjeta.anadirEtiqueta(cmd.etiqueta());
         }
         
         // 4. Persistir a través del puerto de salida e incrementar contador del tablero
