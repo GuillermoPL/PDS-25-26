@@ -11,7 +11,8 @@ public class Board {
     private boolean isLocked;
     private final List<TaskList> tasksLists;
     private ListId listCompletadas; // Lista especial para completadas
-
+    private final List<String> historial = new ArrayList<>();
+    
     public Board(BoardId id, String titulo, Email email) {
         this.id = id;
         this.titulo = titulo;
@@ -29,6 +30,9 @@ public class Board {
     }
     public Email getEmail() { 
     	return email; 
+    }
+    public List<String> getHistorial() {
+        return Collections.unmodifiableList(historial);
     }
     public boolean isLocked() { 
     	return isLocked; 
@@ -104,6 +108,17 @@ public class Board {
      */
     public void restoreTaskList(TaskList taskList) {
         this.tasksLists.add(taskList);
+    }
+    
+    public void registrarEvento(String descripcion) {
+        String timestamp = java.time.LocalDateTime.now()
+            .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        this.historial.add("[" + timestamp + "] " + descripcion);
+    }
+    public void restoreHistorial(List<String> historialCargado) {
+        if (historialCargado != null) {
+            this.historial.addAll(historialCargado);
+        }
     }
     
     @Override

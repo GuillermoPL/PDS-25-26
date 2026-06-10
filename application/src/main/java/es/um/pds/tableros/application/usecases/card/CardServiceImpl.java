@@ -75,6 +75,10 @@ public class CardServiceImpl implements CardService {
         // 4. Persistir a través del puerto de salida e incrementar contador del tablero
         this.cardRepository.save(nuevaTarjeta);
         board.registrarMovimientoTarjeta(null, lId); // Al ser nueva, origen es null
+        
+        board.registrarEvento("Nueva tarjeta creada: '" + cmd.titulo() + "' en la lista " + lId.value());
+        
+        
         boardRepository.save(board);
 
         return nuevaTarjeta;
@@ -96,6 +100,8 @@ public class CardServiceImpl implements CardService {
         String traceLog = this.cardMovementService.moveCard(card, board, new ListId(cmd.targetListId()));
         log.info(traceLog);
 
+        board.registrarEvento(traceLog);
+        
         // 4. Guardar los cambios de ambos agregados en la base de datos
         this.cardRepository.save(card);
         this.boardRepository.save(board);

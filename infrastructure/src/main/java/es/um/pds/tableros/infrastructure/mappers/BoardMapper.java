@@ -44,7 +44,7 @@ public class BoardMapper {
         if (board.getListCompletadas() != null) {
             dto.setListCompletadasId(board.getListCompletadas().value());
         }
-
+        dto.setHistorial(board.getHistorial());
         return dto;
     }
 
@@ -88,13 +88,14 @@ public class BoardMapper {
 
         // Creamos primero la BoardEntity sin listas (para pasársela al TaskListMapper)
         BoardEntity boardEntity = new BoardEntity(
-            board.getId().value(),
-            board.getTitulo(),
-            board.getEmail().value(),
-            board.isLocked(),
-            listCompletadasId,
-            new java.util.ArrayList<>()
-        );
+                board.getId().value(),
+                board.getTitulo(),
+                board.getEmail().value(),
+                board.isLocked(),
+                listCompletadasId,
+                new java.util.ArrayList<>(),
+                new java.util.ArrayList<>(board.getHistorial()) 
+            );
 
         // Mapeamos cada TaskList pasándole la BoardEntity ya construida
         List<TaskListEntity> taskListEntities = board.getTasksLists().stream()
@@ -122,7 +123,9 @@ public class BoardMapper {
         if (entity.getListCompletadasId() != null) {
             board.defineListCompletadas(new ListId(entity.getListCompletadasId()));
         }
-
+        if (entity.getHistorial() != null) {
+            board.restoreHistorial(entity.getHistorial());
+        }
         // Reconstruimos las TaskLists internas usando el TaskListMapper
         if (entity.getTasksLists() != null) {
             entity.getTasksLists().stream()

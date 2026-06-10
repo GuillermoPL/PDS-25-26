@@ -20,6 +20,8 @@
                 </font>
             </Label>
             <Button fx:id="btnBloqueo" text="Bloquear" onAction="#handleAlternarBloqueo"/>
+            <Button text="Historial" onAction="#handleVerHistorial"
+           style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white;"/>
             <HBox HBox.hgrow="ALWAYS" alignment="CENTER_RIGHT">
                 <Button text="+ Añadir Lista" onAction="#handleAnadirListaVentana" style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white;"/>
             </HBox>
