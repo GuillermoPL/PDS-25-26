@@ -354,7 +354,7 @@ public class BoardViewController {
     
     @FXML
     public void handleVolver() {
-        this.sceneManager.navigateToDashboard();
+        sceneManager.navigateToDashboard();
     }
     
     @FXML
@@ -415,6 +415,7 @@ public class BoardViewController {
         renderizarTodo();
     }
 
+    
     // ── Helpers ───────────────────────────────────────────────────────────────
     private void abrirDialogoNuevaTarjeta(String listId) {
         try {
