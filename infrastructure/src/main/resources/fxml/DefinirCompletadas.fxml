@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox spacing="15.0" prefWidth="350.0"
+      xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="es.um.pds.tableros.infrastructure.javafx.controllers.DefinirCompletadasController">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+    </padding>
+
+    <Label text="Ajustes del Tablero">
+        <font>
+            <Font name="System Bold" size="16.0"/>
+        </font>
+    </Label>
+
+    <Label text="Selecciona la lista que actuará como 'Completadas'. Las tareas movidas a esta lista se marcarán automáticamente como hechas." wrapText="true"/>
+
+    <ComboBox fx:id="cbListas" prefWidth="300.0" promptText="Seleccionar lista..."/>
+
+    <HBox spacing="10.0" alignment="CENTER_RIGHT">
+        <Button text="Cancelar" onAction="#handleCancelar" style="-fx-background-color: #ebecf0;"/>
+        <Button text="Guardar Ajustes" onAction="#handleGuardar" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold;"/>
+    </HBox>
+</VBox>
