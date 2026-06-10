@@ -54,11 +54,13 @@ public class BoardViewController {
     @FXML private Label  lblTituloTablero;
     @FXML private Button btnBloqueo;
     @FXML private HBox   hboxColumnas;
-
+    @FXML private ComboBox<String> cbFiltroEtiquetas;
+    
     // ── Estado ────────────────────────────────────────────────────────────────
     private String  boardIdActual;
     private boolean estadoBloqueoActual;
-
+    private String filtroActual = "Todas";
+    
     // ── Constructor ───────────────────────────────────────────────────────────
 
     public BoardViewController(BoardService boardService, CardService cardService,
@@ -101,16 +103,43 @@ public class BoardViewController {
         this.estadoBloqueoActual = tablero.isLocked();
         btnBloqueo.setText(this.estadoBloqueoActual ? "Desbloquear 🔓" : "Bloquear 🔒");
 
-        for (BoardDTO.ListaDTO listaInfo : tablero.getListas()) {
+        // 1. Extraer todas las etiquetas únicas que existen en el tablero ahora mismo
+        List<String> etiquetasUnicas = todasLasTarjetas.stream()
+                .filter(c -> c.getEtiquetas() != null)
+                .flatMap(c -> c.getEtiquetas().stream())
+                .map(CardDTO.EtiquetaDTO::getNombre)
+                .distinct()
+                .sorted()
+                .collect(java.util.stream.Collectors.toList());
+        etiquetasUnicas.add(0, "Todas"); // La primera opción siempre desactiva el filtro
 
+        // 2. Actualizar el ComboBox sin disparar eventos infinitos
+        cbFiltroEtiquetas.setOnAction(null);
+        cbFiltroEtiquetas.getItems().setAll(etiquetasUnicas);
+        if (!etiquetasUnicas.contains(filtroActual)) {
+            filtroActual = "Todas"; // Reseteo por si borraron la única tarjeta con esa etiqueta
+        }
+        cbFiltroEtiquetas.setValue(filtroActual);
+        cbFiltroEtiquetas.setOnAction(e -> handleFiltrarPorEtiqueta());
+
+        // 3. Aplicar el filtro visual a las tarjetas ANTES de repartirlas por las listas
+        List<CardDTO> tarjetasVisuales = todasLasTarjetas;
+        if (!"Todas".equals(filtroActual)) {
+            tarjetasVisuales = todasLasTarjetas.stream()
+                    .filter(c -> c.getEtiquetas() != null &&
+                            c.getEtiquetas().stream().anyMatch(e -> e.getNombre().equals(filtroActual)))
+                    .toList();
+        }
+
+        // 4. Renderizar las columnas usando solo las tarjetas que pasaron el filtro
+        for (BoardDTO.ListaDTO listaInfo : tablero.getListas()) {
             String listId = listaInfo.getId();
             String nombreLista = listaInfo.getNombre();
 
-            List<CardDTO> tarjetasDeEstaLista = todasLasTarjetas.stream()
+            List<CardDTO> tarjetasDeEstaLista = tarjetasVisuales.stream()
                     .filter(c -> listId.equals(c.getListIdActual()))
                     .toList();
 
-            // Pasamos correctamente el ID interno y el nombre visual
             VBox columna = crearColumnaVisual(listId, nombreLista, tarjetasDeEstaLista);
             hboxColumnas.getChildren().add(columna);
         }
@@ -331,6 +360,15 @@ public class BoardViewController {
         }
     }
 
+    @FXML
+    public void handleFiltrarPorEtiqueta() {
+        String seleccion = cbFiltroEtiquetas.getValue();
+        if (seleccion != null) {
+            this.filtroActual = seleccion;
+            renderizarTodo(); // Recarga la vista aplicando el filtro
+        }
+    }
+    
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /** Obtiene la ventana principal para usarla como owner de los diálogos modales. */
