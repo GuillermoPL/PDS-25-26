@@ -101,15 +101,17 @@ public class BoardViewController {
         this.estadoBloqueoActual = tablero.isLocked();
         btnBloqueo.setText(this.estadoBloqueoActual ? "Desbloquear 🔓" : "Bloquear 🔒");
 
-        // BoardDTO expone getNombresListas(): List<String> con los nombres de columna.
-        // Usamos el nombre como clave tanto para identificar la lista como para filtrar tarjetas.
-        for (String nombreLista : tablero.getNombresListas()) {
+        for (BoardDTO.ListaDTO listaInfo : tablero.getListas()) {
+
+            String listId = listaInfo.getId();
+            String nombreLista = listaInfo.getNombre();
 
             List<CardDTO> tarjetasDeEstaLista = todasLasTarjetas.stream()
-                    .filter(c -> nombreLista.equals(c.getListIdActual()))
+                    .filter(c -> listId.equals(c.getListIdActual()))
                     .toList();
 
-            VBox columna = crearColumnaVisual(nombreLista, nombreLista, tarjetasDeEstaLista);
+            // Pasamos correctamente el ID interno y el nombre visual
+            VBox columna = crearColumnaVisual(listId, nombreLista, tarjetasDeEstaLista);
             hboxColumnas.getChildren().add(columna);
         }
     }

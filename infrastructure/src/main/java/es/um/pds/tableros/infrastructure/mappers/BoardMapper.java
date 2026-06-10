@@ -35,10 +35,10 @@ public class BoardMapper {
         dto.setLocked(board.isLocked());
         
         // Mapeamos la lista de objetos de negocio TaskList a una lista simple de Strings con sus nombres
-        List<String> nombres = board.getTasksLists().stream()
-                .map(TaskList::getNombre)
+        List<BoardDTO.ListaDTO> listasListasDTO = board.getTasksLists().stream()
+                .map(tl -> new BoardDTO.ListaDTO(tl.getId().value(), tl.getNombre()))
                 .toList();
-        dto.setNombresListas(nombres);
+        dto.setListas(listasListasDTO);
 
         // Si tiene asignada una lista de completadas, guardamos su ID plano
         if (board.getListCompletadas() != null) {
