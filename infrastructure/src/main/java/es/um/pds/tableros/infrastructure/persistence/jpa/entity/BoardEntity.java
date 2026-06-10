@@ -1,4 +1,5 @@
 package es.um.pds.tableros.infrastructure.persistence.jpa.entity;
+import jakarta.persistence.FetchType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,10 +33,10 @@ public class BoardEntity {
     @Column(name = "LIST_COMPLETADAS_ID", nullable = true) // Puede ser nulo si no se ha definido aún
     private String listCompletadasId;
 
-    @OneToMany(mappedBy = "board")
+    @OneToMany(mappedBy = "board", fetch = FetchType.EAGER)
     private List<TaskListEntity> tasksLists = new ArrayList<>();
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "BOARD_HISTORIAL", joinColumns = @JoinColumn(name = "BOARD_ID"))
     @Column(name = "EVENTO")
     private List<String> historial = new ArrayList<>();
