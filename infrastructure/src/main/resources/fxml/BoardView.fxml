@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
@@ -22,6 +23,9 @@
             <Button fx:id="btnBloqueo" text="Bloquear" onAction="#handleAlternarBloqueo"/>
             <Button text="Historial" onAction="#handleVerHistorial"
            style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white;"/>
+           
+            <ComboBox fx:id="cbFiltroEtiquetas" promptText="Filtrar etiquetas..." style="-fx-background-color: white;"/>
+
             <HBox HBox.hgrow="ALWAYS" alignment="CENTER_RIGHT">
                 <Button text="+ Añadir Lista" onAction="#handleAnadirListaVentana" style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white;"/>
             </HBox>
