@@ -13,6 +13,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.CascadeType;
+
 @Entity
 @Table(name = "BOARD")
 public class BoardEntity {
@@ -33,7 +35,7 @@ public class BoardEntity {
     @Column(name = "LIST_COMPLETADAS_ID", nullable = true) // Puede ser nulo si no se ha definido aún
     private String listCompletadasId;
 
-    @OneToMany(mappedBy = "board", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "board", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TaskListEntity> tasksLists = new ArrayList<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
