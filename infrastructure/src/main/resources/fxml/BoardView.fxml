@@ -15,6 +15,9 @@
             <padding>
                 <Insets bottom="10.0" left="15.0" right="15.0" top="10.0"/>
             </padding>
+            
+            <Button text="⬅ Volver a Mis Tableros" onAction="#handleVolver" style="-fx-background-color: #ebecf0; -fx-cursor: hand; -fx-font-weight: bold;"/>
+            
             <Label fx:id="lblTituloTablero" text="Cargando Tablero..." textFill="white">
                 <font>
                     <Font name="System Bold" size="18.0"/>
@@ -22,12 +25,12 @@
             </Label>
             
             <Button fx:id="btnBloqueo" text="Bloquear" onAction="#handleAlternarBloqueo"/>
-            <Button text="Historial" onAction="#handleVerHistorial"
-           style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white;"/>
+            <Button text="Historial" onAction="#handleVerHistorial" style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white;"/>
            
             <Label text="Filtros:" textFill="white" style="-fx-font-weight: bold;"/>
             <ComboBox fx:id="cbFiltroEtiquetas" prefWidth="120.0" promptText="Nombre..." style="-fx-background-color: white;"/>
-	<ComboBox fx:id="cbFiltroColor" prefWidth="160.0" promptText="Filtrar color..." style="-fx-background-color: white;"/>            <Button text="Limpiar" onAction="#handleLimpiarFiltros" style="-fx-background-color: rgba(255,100,100,0.8); -fx-text-fill: white;"/>
+            <ComboBox fx:id="cbFiltroColor" prefWidth="160.0" promptText="Filtrar color..." style="-fx-background-color: white;"/>            
+            <Button text="Limpiar" onAction="#handleLimpiarFiltros" style="-fx-background-color: rgba(255,100,100,0.8); -fx-text-fill: white;"/>
 
             <HBox HBox.hgrow="ALWAYS" alignment="CENTER_RIGHT">
                 <Button text="+ Añadir Lista" onAction="#handleAnadirListaVentana" style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white;"/>

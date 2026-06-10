@@ -121,7 +121,7 @@ public class DashboardController {
         if (index >= 0) {
             BoardDTO tableroSeleccionado = tablerosCargados.get(index);
             
-            // ¡RESUELTO!: Llamamos al manager para que efectúe el viaje de pantalla
+            // Llamamos al manager para que efectúe el viaje de pantalla
             this.sceneManager.navigateToBoard(tableroSeleccionado.getId());
         }
     }

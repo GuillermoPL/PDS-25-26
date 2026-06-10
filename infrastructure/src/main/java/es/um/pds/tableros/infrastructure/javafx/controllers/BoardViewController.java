@@ -24,6 +24,7 @@ import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
 import es.um.pds.tableros.infrastructure.rest.dto.CardDTO;
 import es.um.pds.tableros.infrastructure.mappers.BoardMapper;
 import es.um.pds.tableros.infrastructure.mappers.CardMapper;
+import es.um.pds.tableros.infrastructure.javafx.SceneManager;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -45,6 +46,7 @@ public class BoardViewController {
     private final BoardMapper        boardMapper;
     private final CardMapper         cardMapper;
     private final ApplicationContext springContext;
+    private final SceneManager       sceneManager;
 
     // ── Nodos FXML ─────────────────────────────────────────────────────────────
     @FXML private Label              lblTituloTablero;
@@ -61,13 +63,14 @@ public class BoardViewController {
 
     // ── Constructor ───────────────────────────────────────────────────────────
     public BoardViewController(BoardService boardService, CardService cardService,
-                               BoardMapper boardMapper, CardMapper boardMapper2, // Nota: adaptado a tu constructor
-                               CardMapper cardMapper, ApplicationContext springContext) {
+                               BoardMapper boardMapper, CardMapper cardMapper,
+                               ApplicationContext springContext, SceneManager sceneManager) { // <--- NUEVO: Inyectamos
         this.boardService  = boardService;
         this.cardService   = cardService;
         this.boardMapper   = boardMapper;
         this.cardMapper    = cardMapper;
         this.springContext = springContext;
+        this.sceneManager  = sceneManager;
     }
 
     // ── Punto de entrada desde SceneManager ───────────────────────────────────
@@ -303,24 +306,19 @@ public class BoardViewController {
         lblTitulo.setWrapText(true);
         tarjetaVisual.getChildren().add(lblTitulo);
 
-        // ── NUEVO: RENDERIZADO VISUAL DE LOS PASOS DEL CHECKLIST ──
         if ("CHECKLIST".equals(tarjeta.getTipo()) && tarjeta.getChecklistItems() != null && !tarjeta.getChecklistItems().isEmpty()) {
             VBox contenedorChecklist = new VBox(3);
-            contenedorChecklist.setPadding(new Insets(4, 0, 4, 12)); // Margen a la derecha para sangrar los pasos
+            contenedorChecklist.setPadding(new Insets(4, 0, 4, 12)); 
             
             for (String paso : tarjeta.getChecklistItems()) {
                 CheckBox chkPaso = new CheckBox(paso);
                 chkPaso.setStyle("-fx-font-size: 11px; -fx-text-fill: #555555;");
-                
-                // En la vista de tablero se deshabilitan para que el click no interfiera con el arrastre (Drag & Drop)
                 chkPaso.setDisable(true); 
-                chkPaso.setOpacity(0.85); // Forzamos opacidad alta para que se lea perfectamente
-                
+                chkPaso.setOpacity(0.85); 
                 contenedorChecklist.getChildren().add(chkPaso);
             }
             tarjetaVisual.getChildren().add(contenedorChecklist);
         }
-        // ───────────────────────────────────────────────────────────
 
         if (tarjeta.getEtiquetas() != null && !tarjeta.getEtiquetas().isEmpty()) {
             HBox chips = new HBox(4);
@@ -353,6 +351,12 @@ public class BoardViewController {
     }
 
     // ── Acciones FXML ──────────────────────────────────────────────────────────
+    
+    @FXML
+    public void handleVolver() {
+        this.sceneManager.navigateToDashboard();
+    }
+    
     @FXML
     public void handleAlternarBloqueo() {
         try {
