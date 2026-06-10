@@ -187,8 +187,8 @@ public class BoardViewController {
     private VBox crearTarjetaVisual(CardDTO tarjeta) {
         VBox tarjetaVisual = new VBox(4);
         tarjetaVisual.setStyle(
-            "-fx-background-color: white; -fx-padding: 10; -fx-background-radius: 4; " +
-            "-fx-effect: dropshadow(tiny, rgba(0,0,0,0.1), 2, 0, 0, 1); -fx-cursor: hand;");
+                "-fx-background-color: white; -fx-padding: 10; -fx-background-radius: 4; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 2, 0, 0, 1); -fx-cursor: hand;");
 
         // Tipo (icono) + título
         String iconoTipo = "CHECKLIST".equals(tarjeta.getTipo()) ? "☑ " : "✔ ";
