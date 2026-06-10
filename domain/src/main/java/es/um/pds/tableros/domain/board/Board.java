@@ -45,16 +45,23 @@ public class Board {
     }
     
     //Métodos
-    public void addList(String nombre, Integer maxCards) {
+    public TaskList addList(String nombre, Integer maxCards) {
         if (isLocked) {
-            throw new IllegalStateException("No se pueden añadir listas a un tablero bloqueado");
+            throw new IllegalStateException(
+                "No se pueden añadir listas a un tablero bloqueado"
+            );
         }
-        
-        // El propio Tablero genera la ID e instancia su entidad interna
+
         ListId nuevaListId = ListId.generate();
-        TaskList nuevaLista = new TaskList(nuevaListId, nombre, maxCards);
-        
+        TaskList nuevaLista = new TaskList(
+            nuevaListId,
+            nombre,
+            maxCards
+        );
+
         this.tasksLists.add(nuevaLista);
+
+        return nuevaLista;
     }
 
     public void defineListCompletadas(ListId listId) {

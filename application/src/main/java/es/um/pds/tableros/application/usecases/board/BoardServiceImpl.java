@@ -11,6 +11,7 @@ import es.um.pds.tableros.domain.board.Board;
 import es.um.pds.tableros.domain.board.BoardId;
 import es.um.pds.tableros.domain.board.Email;
 import es.um.pds.tableros.domain.board.ListId;
+import es.um.pds.tableros.domain.board.TaskList;
 import es.um.pds.tableros.domain.ports.input.board.BoardService;
 import es.um.pds.tableros.domain.ports.input.board.commands.AnadirListCommand;
 import es.um.pds.tableros.domain.ports.input.board.commands.CambiarBloqueoBoardCommand;
@@ -64,20 +65,33 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public void anadirListaATablero(AnadirListCommand cmd) {
-        log.info("Añadiendo lista '{}' al tablero {}", cmd.nombreLista(), cmd.boardId());
+    public String anadirListaATablero(AnadirListCommand cmd) {
 
-        // 1. Recuperamos el tablero
-        Board board = this.boardRepository.findById(new BoardId(cmd.boardId()))
-                .orElseThrow(() -> new IllegalArgumentException("El tablero especificado no existe"));
+        log.info("Añadiendo lista '{}' al tablero {}",
+                 cmd.nombreLista(),
+                 cmd.boardId());
 
-        // 2. Le delegamos T_ODO el trabajo al agregado pasándole solo los datos del comando
-        board.addList(cmd.nombreLista(), cmd.maxCards());
+        Board board = this.boardRepository
+                .findById(new BoardId(cmd.boardId()))
+                .orElseThrow(() ->
+                    new IllegalArgumentException(
+                        "El tablero especificado no existe"
+                    )
+                );
 
-        board.registrarEvento("Lista añadida: " + cmd.nombreLista());
-        
-        // 3. Guardamos el estado
+        TaskList nuevaLista =
+                board.addList(
+                        cmd.nombreLista(),
+                        cmd.maxCards()
+                );
+
+        board.registrarEvento(
+                "Lista añadida: " + cmd.nombreLista()
+        );
+
         this.boardRepository.save(board);
+
+        return nuevaLista.getId().value();
     }
 
     @Override

@@ -1,0 +1,11 @@
+titulo: "Plantilla Kanban Base"
+listas:
+  - nombre: "Por Hacer"
+    tarjetas:
+      - "Revisar correos"
+      - "Planificar sprint"
+  - nombre: "En Progreso"
+    tarjetas:
+      - "Implementar YAML"
+  - nombre: "Hecho"
+    tarjetas: []

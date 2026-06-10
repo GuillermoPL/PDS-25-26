@@ -24,7 +24,7 @@ public interface BoardService {
     Board crearNuevoTablero(CrearBoardCommand cmd);
 
     // Añade una columna/lista validando que el tablero no esté bloqueado
-    void anadirListaATablero(AnadirListCommand cmd);
+    String anadirListaATablero(AnadirListCommand cmd);
 
     // Configura el ListId que actuará como el contenedor de tareas "Done"
     void definirListaCompletadas(DefinirListCompletadasCommand cmd);
