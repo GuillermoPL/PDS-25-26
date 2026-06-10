@@ -28,4 +28,7 @@
     <ListView fx:id="listTableros" VBox.vgrow="ALWAYS" onMouseClicked="#handleSeleccionarTablero"/>
 
     <Button fx:id="btnCrearTablero" text="+ Crear Nuevo Tablero" onAction="#handleCrearTablero" maxWidth="Infinity" style="-fx-background-color: #0079bf; -fx-text-fill: white; -fx-font-weight: bold;"/>
+    <Button text="Crear desde plantilla"
+        onAction="#handleCrearDesdePlantilla"
+        maxWidth="Infinity"/>
 </VBox>

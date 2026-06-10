@@ -1,0 +1,11 @@
+titulo: "Tablero Ágil por Defecto"
+listas:
+  - nombre: "To Do"
+    tarjetas:
+      - "Diseñar base de datos"
+      - "Configurar Spring Security"
+  - nombre: "In Progress"
+    tarjetas:
+      - "Integrar JavaFX"
+  - nombre: "Done"
+    tarjetas: []

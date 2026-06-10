@@ -8,6 +8,7 @@ import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
 import es.um.pds.tableros.infrastructure.mappers.BoardMapper;
 import es.um.pds.tableros.infrastructure.javafx.SceneManager; // Importamos el manager
 import org.springframework.stereotype.Component;
+import es.um.pds.tableros.infrastructure.plantillas.PlantillaService;
 import java.util.List;
 
 @Component
@@ -16,16 +17,23 @@ public class DashboardController {
     private final BoardService boardService;
     private final BoardMapper boardMapper;
     private final SceneManager sceneManager; // Añadimos la dependencia
-
+    private final PlantillaService plantillaService;
+    
     @FXML private TextField txtEmail;
     @FXML private ListView<String> listTableros;
     private List<BoardDTO> tablerosCargados;
 
     // Spring se encarga de inyectar las tres piezas de forma automática
-    public DashboardController(BoardService boardService, BoardMapper boardMapper, SceneManager sceneManager) {
+    public DashboardController(
+            BoardService boardService,
+            BoardMapper boardMapper,
+            SceneManager sceneManager,
+            PlantillaService plantillaService) {
+
         this.boardService = boardService;
         this.boardMapper = boardMapper;
         this.sceneManager = sceneManager;
+        this.plantillaService = plantillaService;
     }
     @FXML
     public void initialize() {
@@ -132,5 +140,38 @@ public class DashboardController {
             // Llamamos al manager para que efectúe el viaje de pantalla
             this.sceneManager.navigateToBoard(tableroSeleccionado.getId());
         }
+    }
+    @FXML
+    public void handleCrearDesdePlantilla() {
+
+        String email = txtEmail.getText();
+
+        if (email == null || email.isBlank()) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setContentText("Introduce primero tu email.");
+            alert.showAndWait();
+            return;
+        }
+
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(
+                "basica.yaml",
+                List.of(
+                        "basica.yaml",
+                        "plantilla-agil.yaml"
+                )
+        );
+
+        dialog.setTitle("Crear desde plantilla");
+        dialog.setHeaderText("Selecciona una plantilla");
+
+        dialog.showAndWait().ifPresent(nombrePlantilla -> {
+
+            plantillaService.crearTableroDesdePlantilla(
+                    nombrePlantilla,
+                    email
+            );
+
+            handleCargarTableros();
+        });
     }
 }
