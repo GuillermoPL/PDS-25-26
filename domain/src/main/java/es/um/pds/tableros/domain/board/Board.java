@@ -131,12 +131,27 @@ public class Board {
             .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
         this.historial.add("[" + timestamp + "] " + descripcion);
     }
+    
     public void restoreHistorial(List<String> historialCargado) {
         if (historialCargado != null) {
             this.historial.addAll(historialCargado);
         }
     }
     
+    /**
+     * Busca el nombre de una lista a partir de su ID.
+     */
+    public String obtenerNombreLista(ListId listId) {
+        if (listId == null) {
+        	return "Origen"; // Por si la tarjeta es nueva y viene de null
+        }
+        return this.tasksLists.stream()
+			                  .filter(lista -> lista.getId().equals(listId))
+			                  .map(TaskList::getNombre)
+			                  .findFirst()
+			                  .orElse("Lista desconocida");
+	}
+   
     @Override
     public boolean equals(Object o) {
         if (this == o) {

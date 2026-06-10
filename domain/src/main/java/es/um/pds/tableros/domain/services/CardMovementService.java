@@ -33,8 +33,11 @@ public class CardMovementService {
         if (board.getListCompletadas() != null && board.getListCompletadas().equals(targetListId)) {
             card.marcarCompletada();
         }
-
-        return String.format("Tarjeta [%s] movida de la lista [%s] a la lista [%s] en el tablero [%s].", 
-        		card.getId().value(), oldListId.value(), targetListId.value(), board.getId().value());
+        
+        String nombreOrigen = board.obtenerNombreLista(oldListId);
+        String nombreDestino = board.obtenerNombreLista(targetListId);
+        
+        return String.format("Tarjeta '%s' movida de la lista '%s' a la lista '%s' en el tablero '%s'.", 
+                card.getTitulo(), nombreOrigen, nombreDestino, board.getTitulo());
     }
 }

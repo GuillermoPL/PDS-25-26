@@ -82,7 +82,7 @@ public class CardServiceImpl implements CardService {
         this.cardRepository.save(nuevaTarjeta);
         board.registrarMovimientoTarjeta(null, lId); // Al ser nueva, origen es null
         
-        board.registrarEvento("Nueva tarjeta creada: '" + cmd.titulo() + "' en la lista " + lId.value());
+        board.registrarEvento("Nueva tarjeta creada: '" + cmd.titulo() + "' en la lista " + board.obtenerNombreLista(lId));
         
         
         boardRepository.save(board);
