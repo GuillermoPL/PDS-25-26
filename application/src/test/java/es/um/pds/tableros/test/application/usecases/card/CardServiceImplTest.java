@@ -53,7 +53,7 @@ class CardServiceImplTest {
         when(boardRepository.findById(new BoardId("b1"))).thenReturn(Optional.of(boardSimulado));
 
         // null en el último parámetro = sin etiqueta (campo opcional)
-        CrearCardCommand cmd = new CrearCardCommand("b1", validListId, "Nueva Tarea", "TASK", null);
+        CrearCardCommand cmd = new CrearCardCommand("b1", validListId, "Nueva Tarea", "TASK", null, null);
 
         // 2. Ejecutamos
         Card nuevaTarjeta = cardService.crearNuevaTarjeta(cmd);

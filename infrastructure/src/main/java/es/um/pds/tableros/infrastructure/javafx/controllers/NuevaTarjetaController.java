@@ -1,13 +1,18 @@
 package es.um.pds.tableros.infrastructure.javafx.controllers;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ColorPicker;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import es.um.pds.tableros.domain.card.CardType;
@@ -16,57 +21,68 @@ import es.um.pds.tableros.domain.ports.input.card.CardService;
 import es.um.pds.tableros.domain.ports.input.card.commands.CrearCardCommand;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 /**
  * Controlador del diálogo "Nueva Tarjeta" ({@code NuevaTarjeta.fxml}).
- *
- * <p>Construye un objeto de dominio {@link Etiqueta} directamente aquí, en la
- * infraestructura, y lo pasa al comando. Así el módulo {@code domain} no
- * depende de ningún DTO de infraestructura (regla de la arquitectura hexagonal).
- *
- * <p>El color se convierte de {@link Color} (JavaFX) a hex CSS (#rrggbb) antes
- * de crear la etiqueta, que es el formato que espera el record del dominio.
  */
 @Component
+@Scope("prototype") // Obliga a Spring a crear una instancia nueva cada vez que se abre la ventana
 public class NuevaTarjetaController implements Initializable {
 
-    // ── Puerto de entrada inyectado por Spring ─────────────────────────────────
     private final CardService cardService;
 
-    // ── Nodos FXML ─────────────────────────────────────────────────────────────
     @FXML private TextField          txtTitulo;
     @FXML private ChoiceBox<CardType> cbTipo;
     @FXML private TextField          txtEtiqueta;
     @FXML private ColorPicker        cpColor;
+    
+    @FXML private VBox               sectionChecklist;
+    @FXML private TextField          txtNuevoItem;
+    @FXML private ListView<String>   listViewItems;
 
-    // ── Contexto asignado por el padre antes de showAndWait() ─────────────────
     private String boardId;
     private String listId;
-
-    // ── Constructor ───────────────────────────────────────────────────────────
+    
+    private final ObservableList<String> checklistItemsTemporales = FXCollections.observableArrayList();
 
     public NuevaTarjetaController(CardService cardService) {
         this.cardService = cardService;
     }
-
-    // ── Inicialización ─────────────────────────────────────────────────────────
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         cbTipo.getItems().addAll(CardType.values());
         cbTipo.setValue(CardType.TASK);
 
-        // Color por defecto: azul Trello para que no quede vacío
         cpColor.setValue(Color.web("#0079bf"));
+        
+        listViewItems.setItems(checklistItemsTemporales);
+        
+        sectionChecklist.setVisible(false);
+        sectionChecklist.setManaged(false);
+        
+        cbTipo.valueProperty().addListener((obs, oldVal, newVal) -> {
+            boolean isChecklist = (newVal == CardType.CHECKLIST);
+            sectionChecklist.setVisible(isChecklist);
+            sectionChecklist.setManaged(isChecklist);
+        });
     }
-
-    // ── API para el controlador padre ──────────────────────────────────────────
 
     public void setBoardId(String boardId) { this.boardId = boardId; }
     public void setListId(String listId)   { this.listId  = listId;  }
-
-    // ── Acciones FXML ──────────────────────────────────────────────────────────
+    
+    @FXML
+    public void handleAnadirPaso() {
+        String textoItem = txtNuevoItem.getText().trim();
+        if (!textoItem.isBlank()) {
+            checklistItemsTemporales.add(textoItem);
+            txtNuevoItem.clear();
+            txtNuevoItem.requestFocus(); 
+        }
+    }
 
     @FXML
     public void handleCrear() {
@@ -79,22 +95,27 @@ public class NuevaTarjetaController implements Initializable {
         }
 
         try {
-            // Construimos la Etiqueta del dominio aquí, en infraestructura.
-            // Solo si el usuario escribió un nombre; si no, pasamos null.
             Etiqueta etiqueta = construirEtiqueta();
+
+            // Solo cogemos los ítems si la tarjeta es realmente de tipo CHECKLIST
+            List<String> itemsFinales = new ArrayList<>();
+            if (cbTipo.getValue() == CardType.CHECKLIST) {
+                itemsFinales.addAll(checklistItemsTemporales);
+            }
 
             CrearCardCommand cmd = new CrearCardCommand(
                 boardId,
                 listId,
                 titulo,
-                cbTipo.getValue().name(), // "TASK" o "CHECKLIST"
-                etiqueta
+                cbTipo.getValue().name(),
+                etiqueta,
+                itemsFinales 
             );
+            
             cardService.crearNuevaTarjeta(cmd);
             cerrarVentana();
 
-        } catch (IllegalStateException e) {
-            // El dominio rechaza la operación (tablero bloqueado, lista llena…)
+        } catch (IllegalStateException | IllegalArgumentException e) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Acción no permitida");
             alert.setHeaderText("Regla de negocio incumplida");
@@ -115,28 +136,15 @@ public class NuevaTarjetaController implements Initializable {
         cerrarVentana();
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    /**
-     * Construye un objeto {@link Etiqueta} del dominio a partir de los campos
-     * del formulario, o devuelve {@code null} si el nombre está vacío.
-     *
-     * <p>Convierte el {@link Color} de JavaFX a formato hex CSS (#rrggbb)
-     * que es el formato que acepta el record {@link Etiqueta}.
-     */
     private Etiqueta construirEtiqueta() {
         String nombre = txtEtiqueta.getText().trim();
         if (nombre.isBlank()) {
-            return null; // etiqueta opcional
+            return null; 
         }
         String colorHex = colorToHex(cpColor.getValue());
         return new Etiqueta(nombre, colorHex);
     }
 
-    /**
-     * Convierte un {@link Color} de JavaFX al string hex CSS {@code #rrggbb}.
-     * Ejemplo: Color.RED → "#ff0000"
-     */
     private String colorToHex(Color color) {
         return String.format("#%02x%02x%02x",
             (int) (color.getRed()   * 255),
