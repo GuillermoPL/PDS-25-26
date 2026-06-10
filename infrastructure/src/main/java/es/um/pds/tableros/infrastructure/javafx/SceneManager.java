@@ -32,7 +32,7 @@ public class SceneManager {
      * Cambia la ventana a la pantalla del Dashboard.
      */
     public void navigateToDashboard() {
-        cambiarEscena("/fxml/dashboard.fxml", "Mis Tableros Kanban");
+        cambiarEscena("/fxml/Dashboard.fxml", "Mis Tableros PCEO");
     }
 
     /**
@@ -41,7 +41,7 @@ public class SceneManager {
     public void navigateToBoard(String boardId) {
         try {
             // 1. Configuramos el cargador FXML enlazado al contenedor de Spring
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/board_view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/BoardView.fxml"));
             loader.setControllerFactory(springContext::getBean); // <--- LA MAGIA: Spring crea el controlador
 
             Parent root = loader.load();
