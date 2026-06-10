@@ -51,8 +51,7 @@ class CardServiceImplTest {
         String validListId = boardSimulado.getTasksLists().get(0).getId().value();
         when(boardRepository.findById(new BoardId("b1"))).thenReturn(Optional.of(boardSimulado));
 
-        CrearCardCommand cmd = new CrearCardCommand("b1", validListId, "Nueva Tarea", "TASK");
-
+        CrearCardCommand cmd = new CrearCardCommand("b1", validListId, "Nueva Tarea", "TASK", "Urgente");
         // 2. Ejecutamos
         Card nuevaTarjeta = cardService.crearNuevaTarjeta(cmd);
 
