@@ -4,14 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.JoinColumn;
 @Entity
 @Table(name = "CARD")
 public class CardEntity {
@@ -43,6 +48,10 @@ public class CardEntity {
     @Column(name = "item")
     private List<String> checklistItems = new ArrayList<>();
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "card_etiquetas", joinColumns = @JoinColumn(name = "card_id"))
+    private List<EtiquetaEmbeddable> etiquetas = new ArrayList<>();
+    
     public CardEntity() {}
 
     public CardEntity(String id, String boardId, String listIdActual, String titulo, 
@@ -75,7 +84,8 @@ public class CardEntity {
     public void setTipo(String tipo) { this.tipo = tipo; }
     public List<String> getChecklistItems() { return checklistItems; }
     public void setChecklistItems(List<String> checklistItems) { this.checklistItems = checklistItems; }
-
+    public List<EtiquetaEmbeddable> getEtiquetas() { return etiquetas; }
+    public void setEtiquetas(List<EtiquetaEmbeddable> etiquetas) { this.etiquetas = etiquetas; }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

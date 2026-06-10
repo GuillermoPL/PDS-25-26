@@ -1,5 +1,7 @@
 package es.um.pds.tableros.infrastructure.mappers;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 import es.um.pds.tableros.domain.board.BoardId;
 import es.um.pds.tableros.domain.board.ListId;
@@ -10,6 +12,7 @@ import es.um.pds.tableros.domain.card.Etiqueta;
 import es.um.pds.tableros.infrastructure.rest.dto.CardDTO;
 
 import es.um.pds.tableros.infrastructure.persistence.jpa.entity.CardEntity;
+import es.um.pds.tableros.infrastructure.persistence.jpa.entity.EtiquetaEmbeddable;
 @Component
 public class CardMapper {
 
@@ -64,8 +67,7 @@ public class CardMapper {
      * De objeto de dominio a entidad JPA.
      */
     public CardEntity toEntity(Card card) {
-        if (card == null) return null;
-        return new CardEntity(
+        CardEntity entity = new CardEntity(
             card.getId().value(),
             card.getBoardId().value(),
             card.getListIdActual().value(),
@@ -75,6 +77,14 @@ public class CardMapper {
             card.getTipo().name(),
             new java.util.ArrayList<>(card.getChecklistItems())
         );
+        
+        // Mapeo Dominio -> Infraestructura
+        List<EtiquetaEmbeddable> etiquetasEntity = card.getEtiquetas().stream()
+            .map(e -> new EtiquetaEmbeddable(e.nombre(), e.color()))
+            .toList();
+        entity.setEtiquetas(new java.util.ArrayList<>(etiquetasEntity));
+        
+        return entity;
     }
 
     /**
@@ -90,6 +100,12 @@ public class CardMapper {
 
         Card card = new Card(cardId, boardId, listId, entity.getTitulo(), tipo);
 
+        if (entity.getEtiquetas() != null) {
+            entity.getEtiquetas().forEach(e -> 
+                card.anadirEtiqueta(new Etiqueta(e.getNombre(), e.getColor()))
+            );
+        }
+        
         if (entity.isCompletada()) {
             card.marcarCompletada();
         }
