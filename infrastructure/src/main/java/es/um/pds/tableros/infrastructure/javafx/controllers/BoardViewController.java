@@ -162,18 +162,23 @@ public class BoardViewController {
             private final Rectangle rect = new Rectangle(16, 16);
             private final Label     lbl  = new Label();
             private final HBox      box  = new HBox(8, rect, lbl);
-            { box.setStyle("-fx-alignment: CENTER_LEFT;"); }
+            { 
+                box.setStyle("-fx-alignment: CENTER_LEFT;"); 
+                lbl.setStyle("-fx-text-fill: #333333;"); // <-- FORZAMOS TEXTO OSCURO
+            }
 
             @Override
             protected void updateItem(String colorHex, boolean empty) {
                 super.updateItem(colorHex, empty);
                 if (empty || colorHex == null) {
                     setGraphic(null);
+                    setText(null);
                 } else if (SIN_FILTRO_COLOR.equals(colorHex)) {
                     rect.setFill(Color.TRANSPARENT);
                     rect.setStroke(Color.LIGHTGRAY);
                     lbl.setText("Todos los colores");
                     setGraphic(box);
+                    setText(null);
                 } else {
                     try {
                         rect.setFill(Color.web(colorHex));
@@ -183,6 +188,7 @@ public class BoardViewController {
                     }
                     lbl.setText(colorHex);
                     setGraphic(box);
+                    setText(null);
                 }
             }
         });
@@ -191,18 +197,23 @@ public class BoardViewController {
             private final Rectangle rect = new Rectangle(14, 14);
             private final Label     lbl  = new Label();
             private final HBox      box  = new HBox(6, rect, lbl);
-            { box.setStyle("-fx-alignment: CENTER_LEFT;"); }
+            { 
+                box.setStyle("-fx-alignment: CENTER_LEFT;"); 
+                lbl.setStyle("-fx-text-fill: #333333;"); // <-- FORZAMOS TEXTO OSCURO
+            }
 
             @Override
             protected void updateItem(String colorHex, boolean empty) {
                 super.updateItem(colorHex, empty);
                 if (empty || colorHex == null) {
                     setGraphic(null);
+                    setText(null);
                 } else if (SIN_FILTRO_COLOR.equals(colorHex)) {
                     rect.setFill(Color.TRANSPARENT);
                     rect.setStroke(Color.LIGHTGRAY);
                     lbl.setText("Todos");
                     setGraphic(box);
+                    setText(null);
                 } else {
                     try {
                         rect.setFill(Color.web(colorHex));
@@ -212,6 +223,7 @@ public class BoardViewController {
                     }
                     lbl.setText(colorHex);
                     setGraphic(box);
+                    setText(null);
                 }
             }
         });

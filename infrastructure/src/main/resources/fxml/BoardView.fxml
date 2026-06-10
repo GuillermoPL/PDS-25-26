@@ -27,8 +27,7 @@
            
             <Label text="Filtros:" textFill="white" style="-fx-font-weight: bold;"/>
             <ComboBox fx:id="cbFiltroEtiquetas" prefWidth="120.0" promptText="Nombre..." style="-fx-background-color: white;"/>
-            <ComboBox fx:id="cbFiltroColor" prefWidth="120.0" promptText="Color..." style="-fx-background-color: white;"/>
-            <Button text="✕ Limpiar" onAction="#handleLimpiarFiltros" style="-fx-background-color: rgba(255,100,100,0.8); -fx-text-fill: white;"/>
+	<ComboBox fx:id="cbFiltroColor" prefWidth="160.0" promptText="Filtrar color..." style="-fx-background-color: white;"/>            <Button text="Limpiar" onAction="#handleLimpiarFiltros" style="-fx-background-color: rgba(255,100,100,0.8); -fx-text-fill: white;"/>
 
             <HBox HBox.hgrow="ALWAYS" alignment="CENTER_RIGHT">
                 <Button text="+ Añadir Lista" onAction="#handleAnadirListaVentana" style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white;"/>
