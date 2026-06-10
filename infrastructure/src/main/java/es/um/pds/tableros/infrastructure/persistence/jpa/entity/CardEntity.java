@@ -11,7 +11,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
-
+import jakarta.persistence.FetchType;
 @Entity
 @Table(name = "CARD")
 public class CardEntity {
@@ -38,9 +38,9 @@ public class CardEntity {
     @Column(name = "TIPO", nullable = false)
     private String tipo; 
 
-    @ElementCollection
-    @CollectionTable(name = "CARD_CHECKLIST_ITEM", joinColumns = @JoinColumn(name = "CARD_ID"))
-    @Column(name = "ITEM", nullable = false)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "card_checklist_item", joinColumns = @JoinColumn(name = "card_id"))
+    @Column(name = "item")
     private List<String> checklistItems = new ArrayList<>();
 
     public CardEntity() {}

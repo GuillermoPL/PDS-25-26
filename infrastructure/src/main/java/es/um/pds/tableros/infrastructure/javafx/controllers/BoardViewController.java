@@ -134,7 +134,7 @@ public class BoardViewController {
 
         // Cabecera con nombre y contador
         Label lblTitulo = new Label(nombreLista + " (" + tarjetas.size() + ")");
-        lblTitulo.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 0 0 6 0;");
+        lblTitulo.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 0 0 6 0; -fx-text-fill: #333333;");
         columna.getChildren().add(lblTitulo);
 
         // Contenedor interno de tarjetas (es el destino real del drop)
@@ -187,13 +187,13 @@ public class BoardViewController {
     private VBox crearTarjetaVisual(CardDTO tarjeta) {
         VBox tarjetaVisual = new VBox(4);
         tarjetaVisual.setStyle(
-            "-fx-background-color: white; -fx-padding: 10; -fx-background-radius: 4; " +
-            "-fx-effect: dropshadow(tiny, rgba(0,0,0,0.1), 2, 0, 0, 1); -fx-cursor: hand;");
+                "-fx-background-color: white; -fx-padding: 10; -fx-background-radius: 4; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 2, 0, 0, 1); -fx-cursor: hand;");
 
         // Tipo (icono) + título
         String iconoTipo = "CHECKLIST".equals(tarjeta.getTipo()) ? "☑ " : "✔ ";
         Label lblTitulo = new Label(iconoTipo + tarjeta.getTitulo());
-        lblTitulo.setStyle("-fx-font-size: 12px;");
+        lblTitulo.setStyle("-fx-font-size: 12px; -fx-text-fill: #333333;");
         lblTitulo.setWrapText(true);
         tarjetaVisual.getChildren().add(lblTitulo);
 
