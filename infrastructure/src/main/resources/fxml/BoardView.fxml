@@ -11,7 +11,7 @@
 
 <BorderPane prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #0079bf;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="es.um.pds.tableros.infrastructure.javafx.controllers.BoardViewController">
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="20.0" style="-fx-background-color: rgba(0,0,0,0.2);">
+        <HBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-background-color: rgba(0,0,0,0.2);">
             <padding>
                 <Insets bottom="10.0" left="15.0" right="15.0" top="10.0"/>
             </padding>
@@ -20,11 +20,15 @@
                     <Font name="System Bold" size="18.0"/>
                 </font>
             </Label>
+            
             <Button fx:id="btnBloqueo" text="Bloquear" onAction="#handleAlternarBloqueo"/>
             <Button text="Historial" onAction="#handleVerHistorial"
            style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white;"/>
            
-            <ComboBox fx:id="cbFiltroEtiquetas" promptText="Filtrar etiquetas..." style="-fx-background-color: white;"/>
+            <Label text="Filtros:" textFill="white" style="-fx-font-weight: bold;"/>
+            <ComboBox fx:id="cbFiltroEtiquetas" prefWidth="120.0" promptText="Nombre..." style="-fx-background-color: white;"/>
+            <ComboBox fx:id="cbFiltroColor" prefWidth="120.0" promptText="Color..." style="-fx-background-color: white;"/>
+            <Button text="✕ Limpiar" onAction="#handleLimpiarFiltros" style="-fx-background-color: rgba(255,100,100,0.8); -fx-text-fill: white;"/>
 
             <HBox HBox.hgrow="ALWAYS" alignment="CENTER_RIGHT">
                 <Button text="+ Añadir Lista" onAction="#handleAnadirListaVentana" style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white;"/>

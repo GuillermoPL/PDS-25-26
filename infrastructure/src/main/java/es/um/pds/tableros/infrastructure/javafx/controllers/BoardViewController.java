@@ -8,6 +8,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.geometry.Insets;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -28,41 +30,36 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
-/**
- * Controlador de la vista principal del tablero Kanban ({@code BoardView.fxml}).
- *
- * <p>Gestiona el ciclo completo de la pantalla: renderizado de columnas,
- * drag & drop de tarjetas entre listas, bloqueo/desbloqueo del tablero,
- * y apertura de los diálogos modales de añadir lista, crear tarjeta e historial.
- *
- * <p>Sigue el mismo patrón que {@link DashboardController}: Spring inyecta
- * todas las dependencias por constructor, y el {@link SceneManager} lo instancia
- * a través de {@code loader.setControllerFactory(springContext::getBean)}.
- */
 @Component
 public class BoardViewController {
+
+    // ── Constantes de "sin filtro" ─────────────────────────────────────────────
+    private static final String SIN_FILTRO_NOMBRE = "Todas";
+    private static final String SIN_FILTRO_COLOR  = "Todos";
 
     // ── Dependencias inyectadas por Spring ────────────────────────────────────
     private final BoardService       boardService;
     private final CardService        cardService;
     private final BoardMapper        boardMapper;
     private final CardMapper         cardMapper;
-    private final ApplicationContext springContext; // para abrir sub-diálogos con Spring
+    private final ApplicationContext springContext;
 
     // ── Nodos FXML ─────────────────────────────────────────────────────────────
-    @FXML private Label  lblTituloTablero;
-    @FXML private Button btnBloqueo;
-    @FXML private HBox   hboxColumnas;
-    @FXML private ComboBox<String> cbFiltroEtiquetas;
-    
+    @FXML private Label              lblTituloTablero;
+    @FXML private Button             btnBloqueo;
+    @FXML private HBox               hboxColumnas;
+    @FXML private ComboBox<String>   cbFiltroEtiquetas; // filtra por nombre
+    @FXML private ComboBox<String>   cbFiltroColor;     // filtra por color hex
+
     // ── Estado ────────────────────────────────────────────────────────────────
     private String  boardIdActual;
     private boolean estadoBloqueoActual;
-    private String filtroActual = "Todas";
-    
-    // ── Constructor ───────────────────────────────────────────────────────────
+    private String  filtroNombreActual = SIN_FILTRO_NOMBRE;
+    private String  filtroColorActual  = SIN_FILTRO_COLOR;
 
+    // ── Constructor ───────────────────────────────────────────────────────────
     public BoardViewController(BoardService boardService, CardService cardService,
                                BoardMapper boardMapper, CardMapper cardMapper,
                                ApplicationContext springContext) {
@@ -74,20 +71,13 @@ public class BoardViewController {
     }
 
     // ── Punto de entrada desde SceneManager ───────────────────────────────────
-
-    /** Llamado por {@link SceneManager#navigateToBoard(String)} tras cargar el FXML. */
     public void inicializarTablero(String boardId) {
         this.boardIdActual = boardId;
+        configurarCeldaColor(); // configura la cellFactory UNA sola vez
         renderizarTodo();
     }
 
     // ── Renderizado principal ─────────────────────────────────────────────────
-
-    /**
-     * Limpia el HBox y reconstruye todas las columnas leyendo el estado actual
-     * del dominio. Se llama al iniciar y tras cualquier operación que modifique
-     * el tablero (mover tarjeta, añadir lista, bloquear, etc.).
-     */
     private void renderizarTodo() {
         hboxColumnas.getChildren().clear();
 
@@ -103,76 +93,158 @@ public class BoardViewController {
         this.estadoBloqueoActual = tablero.isLocked();
         btnBloqueo.setText(this.estadoBloqueoActual ? "Desbloquear 🔓" : "Bloquear 🔒");
 
-        // 1. Extraer todas las etiquetas únicas que existen en el tablero ahora mismo
-        List<String> etiquetasUnicas = todasLasTarjetas.stream()
+        actualizarComboNombre(todasLasTarjetas);
+        actualizarComboColor(todasLasTarjetas);
+
+        // Filtro combinado AND: pasa solo si cumple AMBOS criterios activos
+        List<CardDTO> tarjetasFiltradas = todasLasTarjetas.stream()
+                .filter(this::pasaFiltroNombre)
+                .filter(this::pasaFiltroColor)
+                .toList();
+
+        for (BoardDTO.ListaDTO listaInfo : tablero.getListas()) {
+            List<CardDTO> tarjetasDeEstaLista = tarjetasFiltradas.stream()
+                    .filter(c -> listaInfo.getId().equals(c.getListIdActual()))
+                    .toList();
+
+            hboxColumnas.getChildren().add(
+                crearColumnaVisual(listaInfo.getId(), listaInfo.getNombre(), tarjetasDeEstaLista));
+        }
+    }
+
+    // ── Actualización de ComboBoxes ───────────────────────────────────────────
+    private void actualizarComboNombre(List<CardDTO> tarjetas) {
+        List<String> nombres = tarjetas.stream()
                 .filter(c -> c.getEtiquetas() != null)
                 .flatMap(c -> c.getEtiquetas().stream())
                 .map(CardDTO.EtiquetaDTO::getNombre)
                 .distinct()
                 .sorted()
-                .collect(java.util.stream.Collectors.toList());
-        etiquetasUnicas.add(0, "Todas"); // La primera opción siempre desactiva el filtro
+                .collect(Collectors.toList());
 
-        // 2. Actualizar el ComboBox sin disparar eventos infinitos
+        nombres.add(0, SIN_FILTRO_NOMBRE);
         cbFiltroEtiquetas.setOnAction(null);
-        cbFiltroEtiquetas.getItems().setAll(etiquetasUnicas);
-        if (!etiquetasUnicas.contains(filtroActual)) {
-            filtroActual = "Todas"; // Reseteo por si borraron la única tarjeta con esa etiqueta
-        }
-        cbFiltroEtiquetas.setValue(filtroActual);
-        cbFiltroEtiquetas.setOnAction(e -> handleFiltrarPorEtiqueta());
+        cbFiltroEtiquetas.getItems().setAll(nombres);
+        
+        if (!nombres.contains(filtroNombreActual)) filtroNombreActual = SIN_FILTRO_NOMBRE;
+        cbFiltroEtiquetas.setValue(filtroNombreActual);
+        
+        cbFiltroEtiquetas.setOnAction(e -> {
+            String v = cbFiltroEtiquetas.getValue();
+            if (v != null) { filtroNombreActual = v; renderizarTodo(); }
+        });
+    }
 
-        // 3. Aplicar el filtro visual a las tarjetas ANTES de repartirlas por las listas
-        List<CardDTO> tarjetasVisuales = todasLasTarjetas;
-        if (!"Todas".equals(filtroActual)) {
-            tarjetasVisuales = todasLasTarjetas.stream()
-                    .filter(c -> c.getEtiquetas() != null &&
-                            c.getEtiquetas().stream().anyMatch(e -> e.getNombre().equals(filtroActual)))
-                    .toList();
-        }
+    private void actualizarComboColor(List<CardDTO> tarjetas) {
+        List<String> colores = tarjetas.stream()
+                .filter(c -> c.getEtiquetas() != null)
+                .flatMap(c -> c.getEtiquetas().stream())
+                .map(CardDTO.EtiquetaDTO::getColor)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
 
-        // 4. Renderizar las columnas usando solo las tarjetas que pasaron el filtro
-        for (BoardDTO.ListaDTO listaInfo : tablero.getListas()) {
-            String listId = listaInfo.getId();
-            String nombreLista = listaInfo.getNombre();
+        colores.add(0, SIN_FILTRO_COLOR);
+        cbFiltroColor.setOnAction(null);
+        cbFiltroColor.getItems().setAll(colores);
+        
+        if (!colores.contains(filtroColorActual)) filtroColorActual = SIN_FILTRO_COLOR;
+        cbFiltroColor.setValue(filtroColorActual);
+        
+        cbFiltroColor.setOnAction(e -> {
+            String v = cbFiltroColor.getValue();
+            if (v != null) { filtroColorActual = v; renderizarTodo(); }
+        });
+    }
 
-            List<CardDTO> tarjetasDeEstaLista = tarjetasVisuales.stream()
-                    .filter(c -> listId.equals(c.getListIdActual()))
-                    .toList();
+    private void configurarCeldaColor() {
+        cbFiltroColor.setCellFactory(lv -> new ListCell<>() {
+            private final Rectangle rect = new Rectangle(16, 16);
+            private final Label     lbl  = new Label();
+            private final HBox      box  = new HBox(8, rect, lbl);
+            { box.setStyle("-fx-alignment: CENTER_LEFT;"); }
 
-            VBox columna = crearColumnaVisual(listId, nombreLista, tarjetasDeEstaLista);
-            hboxColumnas.getChildren().add(columna);
-        }
+            @Override
+            protected void updateItem(String colorHex, boolean empty) {
+                super.updateItem(colorHex, empty);
+                if (empty || colorHex == null) {
+                    setGraphic(null);
+                } else if (SIN_FILTRO_COLOR.equals(colorHex)) {
+                    rect.setFill(Color.TRANSPARENT);
+                    rect.setStroke(Color.LIGHTGRAY);
+                    lbl.setText("Todos los colores");
+                    setGraphic(box);
+                } else {
+                    try {
+                        rect.setFill(Color.web(colorHex));
+                        rect.setStroke(Color.TRANSPARENT);
+                    } catch (Exception ex) {
+                        rect.setFill(Color.GRAY);
+                    }
+                    lbl.setText(colorHex);
+                    setGraphic(box);
+                }
+            }
+        });
+
+        cbFiltroColor.setButtonCell(new ListCell<>() {
+            private final Rectangle rect = new Rectangle(14, 14);
+            private final Label     lbl  = new Label();
+            private final HBox      box  = new HBox(6, rect, lbl);
+            { box.setStyle("-fx-alignment: CENTER_LEFT;"); }
+
+            @Override
+            protected void updateItem(String colorHex, boolean empty) {
+                super.updateItem(colorHex, empty);
+                if (empty || colorHex == null) {
+                    setGraphic(null);
+                } else if (SIN_FILTRO_COLOR.equals(colorHex)) {
+                    rect.setFill(Color.TRANSPARENT);
+                    rect.setStroke(Color.LIGHTGRAY);
+                    lbl.setText("Todos");
+                    setGraphic(box);
+                } else {
+                    try {
+                        rect.setFill(Color.web(colorHex));
+                        rect.setStroke(Color.TRANSPARENT);
+                    } catch (Exception ex) {
+                        rect.setFill(Color.GRAY);
+                    }
+                    lbl.setText(colorHex);
+                    setGraphic(box);
+                }
+            }
+        });
+    }
+
+    // ── Predicados de filtro ──────────────────────────────────────────────────
+    private boolean pasaFiltroNombre(CardDTO c) {
+        if (SIN_FILTRO_NOMBRE.equals(filtroNombreActual)) return true;
+        return c.getEtiquetas() != null &&
+               c.getEtiquetas().stream().anyMatch(e -> filtroNombreActual.equals(e.getNombre()));
+    }
+
+    private boolean pasaFiltroColor(CardDTO c) {
+        if (SIN_FILTRO_COLOR.equals(filtroColorActual)) return true;
+        return c.getEtiquetas() != null &&
+               c.getEtiquetas().stream().anyMatch(e -> filtroColorActual.equals(e.getColor()));
     }
 
     // ── Construcción de columnas ───────────────────────────────────────────────
-
-    /**
-     * Crea el nodo visual de una columna (lista de tareas).
-     *
-     * <p>Además del título y las tarjetas, añade:
-     * <ul>
-     *   <li>Un botón "+ Añadir tarjeta" (desactivado si el tablero está bloqueado).</li>
-     *   <li>Los event handlers de drag & drop para aceptar tarjetas arrastradas.</li>
-     * </ul>
-     */
     private VBox crearColumnaVisual(String listId, String nombreLista, List<CardDTO> tarjetas) {
         VBox columna = new VBox(8);
         columna.setPrefWidth(250);
         columna.setStyle("-fx-background-color: #ebecf0; -fx-background-radius: 5; -fx-padding: 10;");
 
-        // Cabecera con nombre y contador
         Label lblTitulo = new Label(nombreLista + " (" + tarjetas.size() + ")");
         lblTitulo.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 0 0 6 0; -fx-text-fill: #333333;");
         columna.getChildren().add(lblTitulo);
 
-        // Contenedor interno de tarjetas (es el destino real del drop)
         VBox contenedorTarjetas = new VBox(8);
         contenedorTarjetas.setPadding(new Insets(4, 0, 4, 0));
         tarjetas.forEach(t -> contenedorTarjetas.getChildren().add(crearTarjetaVisual(t)));
         columna.getChildren().add(contenedorTarjetas);
 
-        // Botón añadir tarjeta: desactivado cuando el tablero está bloqueado
         Button btnAnadirTarjeta = new Button("+ Añadir tarjeta");
         btnAnadirTarjeta.setMaxWidth(Double.MAX_VALUE);
         btnAnadirTarjeta.setStyle("-fx-background-color: rgba(0,0,0,0.08); -fx-cursor: hand;");
@@ -180,7 +252,6 @@ public class BoardViewController {
         btnAnadirTarjeta.setOnAction(e -> abrirDialogoNuevaTarjeta(listId));
         columna.getChildren().add(btnAnadirTarjeta);
 
-        // ── Drag & Drop: columna como DESTINO ────────────────────────────────
         columna.setOnDragOver(event -> {
             if (event.getGestureSource() != columna && event.getDragboard().hasString()) {
                 event.acceptTransferModes(TransferMode.MOVE);
@@ -209,24 +280,18 @@ public class BoardViewController {
         return columna;
     }
 
-    /**
-     * Crea el nodo visual de una tarjeta individual.
-     * Muestra título, tipo y etiquetas; e implementa el inicio del drag & drop.
-     */
     private VBox crearTarjetaVisual(CardDTO tarjeta) {
         VBox tarjetaVisual = new VBox(4);
         tarjetaVisual.setStyle(
-                "-fx-background-color: white; -fx-padding: 10; -fx-background-radius: 4; " +
-                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 2, 0, 0, 1); -fx-cursor: hand;");
+            "-fx-background-color: white; -fx-padding: 10; -fx-background-radius: 4; " +
+            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 2, 0, 0, 1); -fx-cursor: hand;");
 
-        // Tipo (icono) + título
         String iconoTipo = "CHECKLIST".equals(tarjeta.getTipo()) ? "☑ " : "✔ ";
         Label lblTitulo = new Label(iconoTipo + tarjeta.getTitulo());
         lblTitulo.setStyle("-fx-font-size: 12px; -fx-text-fill: #333333;");
         lblTitulo.setWrapText(true);
         tarjetaVisual.getChildren().add(lblTitulo);
 
-        // Etiquetas de color (chips)
         if (tarjeta.getEtiquetas() != null && !tarjeta.getEtiquetas().isEmpty()) {
             HBox chips = new HBox(4);
             tarjeta.getEtiquetas().forEach(et -> {
@@ -240,18 +305,16 @@ public class BoardViewController {
             tarjetaVisual.getChildren().add(chips);
         }
 
-        // Badge "Completada"
         if (tarjeta.isCompletada()) {
             Label badge = new Label("✓ Completada");
             badge.setStyle("-fx-text-fill: #27ae60; -fx-font-size: 10px; -fx-font-weight: bold;");
             tarjetaVisual.getChildren().add(badge);
         }
 
-        // ── Drag & Drop: tarjeta como ORIGEN ─────────────────────────────────
         tarjetaVisual.setOnDragDetected(event -> {
             Dragboard db = tarjetaVisual.startDragAndDrop(TransferMode.MOVE);
             ClipboardContent content = new ClipboardContent();
-            content.putString(tarjeta.getId()); // ID de la tarjeta como payload
+            content.putString(tarjeta.getId());
             db.setContent(content);
             event.consume();
         });
@@ -260,8 +323,6 @@ public class BoardViewController {
     }
 
     // ── Acciones FXML ──────────────────────────────────────────────────────────
-
-    /** Alterna el estado bloqueado/desbloqueado del tablero y recarga la vista. */
     @FXML
     public void handleAlternarBloqueo() {
         try {
@@ -274,104 +335,73 @@ public class BoardViewController {
         }
     }
 
-    /**
-     * Abre el diálogo modal de añadir lista.
-     * Completa el método que el compañero dejó vacío en la versión original.
-     */
     @FXML
     public void handleAnadirListaVentana() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/AnadirLista.fxml"));
-            loader.setControllerFactory(springContext::getBean); // Spring crea AnadirListaController
-
+            loader.setControllerFactory(springContext::getBean);
             Parent root = loader.load();
-
-            // Pasamos el boardId al controlador del diálogo
             AnadirListaController ctrl = loader.getController();
             ctrl.setBoardId(this.boardIdActual);
-
             Stage dialog = new Stage();
             dialog.initModality(Modality.APPLICATION_MODAL);
             dialog.initOwner(obtenerVentanaPrincipal());
             dialog.setTitle("Añadir Lista");
             dialog.setScene(new Scene(root));
-            dialog.showAndWait(); // bloqueante: volvemos cuando el diálogo se cierra
-
-            // Refrescamos para reflejar la nueva lista (si se creó)
+            dialog.showAndWait();
             renderizarTodo();
-
         } catch (IOException e) {
             mostrarAlertaError("Error al abrir diálogo", e.getMessage());
         }
     }
 
-    /** Abre el diálogo modal de historial de acciones del tablero. */
     @FXML
     public void handleVerHistorial() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Historial.fxml"));
             loader.setControllerFactory(springContext::getBean);
-
             Parent root = loader.load();
-
             HistorialController ctrl = loader.getController();
-            ctrl.setBoardId(this.boardIdActual); // carga y muestra los eventos
-
+            ctrl.setBoardId(this.boardIdActual);
             Stage dialog = new Stage();
             dialog.initModality(Modality.APPLICATION_MODAL);
             dialog.initOwner(obtenerVentanaPrincipal());
             dialog.setTitle("Historial del Tablero");
             dialog.setScene(new Scene(root));
             dialog.show();
-
         } catch (IOException e) {
             mostrarAlertaError("Error al abrir historial", e.getMessage());
         }
     }
 
-    // ── Apertura del diálogo de nueva tarjeta (desde botón de columna) ─────────
+    @FXML
+    public void handleLimpiarFiltros() {
+        filtroNombreActual = SIN_FILTRO_NOMBRE;
+        filtroColorActual  = SIN_FILTRO_COLOR;
+        renderizarTodo();
+    }
 
-    /**
-     * Abre el diálogo modal de creación de tarjeta para la lista indicada.
-     * Se llama desde el botón "+ Añadir tarjeta" de cada columna.
-     */
+    // ── Helpers ───────────────────────────────────────────────────────────────
     private void abrirDialogoNuevaTarjeta(String listId) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/NuevaTarjeta.fxml"));
             loader.setControllerFactory(springContext::getBean);
-
             Parent root = loader.load();
-
             NuevaTarjetaController ctrl = loader.getController();
             ctrl.setBoardId(this.boardIdActual);
             ctrl.setListId(listId);
-
             Stage dialog = new Stage();
             dialog.initModality(Modality.APPLICATION_MODAL);
             dialog.initOwner(obtenerVentanaPrincipal());
             dialog.setTitle("Nueva Tarjeta");
             dialog.setScene(new Scene(root));
             dialog.showAndWait();
-
             renderizarTodo();
-
         } catch (IOException e) {
             mostrarAlertaError("Error al abrir diálogo", e.getMessage());
         }
     }
 
-    @FXML
-    public void handleFiltrarPorEtiqueta() {
-        String seleccion = cbFiltroEtiquetas.getValue();
-        if (seleccion != null) {
-            this.filtroActual = seleccion;
-            renderizarTodo(); // Recarga la vista aplicando el filtro
-        }
-    }
-    
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    /** Obtiene la ventana principal para usarla como owner de los diálogos modales. */
     private Window obtenerVentanaPrincipal() {
         return hboxColumnas.getScene().getWindow();
     }
