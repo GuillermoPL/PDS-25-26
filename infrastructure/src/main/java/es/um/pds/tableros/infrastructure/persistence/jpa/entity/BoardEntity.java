@@ -9,7 +9,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.JoinColumn;
 @Entity
 @Table(name = "BOARD")
 public class BoardEntity {
@@ -33,17 +35,24 @@ public class BoardEntity {
     @OneToMany(mappedBy = "board")
     private List<TaskListEntity> tasksLists = new ArrayList<>();
 
+    @ElementCollection
+    @CollectionTable(name = "BOARD_HISTORIAL", joinColumns = @JoinColumn(name = "BOARD_ID"))
+    @Column(name = "EVENTO")
+    private List<String> historial = new ArrayList<>();
+    
     public BoardEntity() {}
 
     public BoardEntity(String id, String titulo, String email, boolean isLocked, 
-                       String listCompletadasId, List<TaskListEntity> tasksLists) {
-        this.id = id;
-        this.titulo = titulo;
-        this.email = email;
-        this.isLocked = isLocked;
-        this.listCompletadasId = listCompletadasId;
-        this.tasksLists = tasksLists;
-    }
+            String listCompletadasId, List<TaskListEntity> tasksLists, 
+            List<String> historial) {
+    	this.id = id;
+    	this.titulo = titulo;
+    	this.email = email;
+    	this.isLocked = isLocked;
+    	this.listCompletadasId = listCompletadasId;
+    	this.tasksLists = tasksLists;
+    	this.historial = historial != null ? historial : new ArrayList<>();
+}
 
     // Getters y Setters
     public String getId() { return id; }
@@ -58,7 +67,9 @@ public class BoardEntity {
     public void setListCompletadasId(String listCompletadasId) { this.listCompletadasId = listCompletadasId; }
     public List<TaskListEntity> getTasksLists() { return tasksLists; }
     public void setTasksLists(List<TaskListEntity> tasksLists) { this.tasksLists = tasksLists; }
-
+    public List<String> getHistorial() { return historial; }
+    public void setHistorial(List<String> historial) { this.historial = historial; }
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

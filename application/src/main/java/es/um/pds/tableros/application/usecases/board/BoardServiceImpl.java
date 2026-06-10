@@ -55,6 +55,8 @@ public class BoardServiceImpl implements BoardService {
         // Instanciamos el agregado pasándole los parámetros del comando
         Board nuevoTablero = new Board(nuevoBoardId, cmd.titulo(), new Email(cmd.emailCreator()));
 
+        nuevoTablero.registrarEvento("Tablero creado por " + cmd.emailCreator());
+        
         // Persistimos el nuevo tablero a través del puerto de salida
         this.boardRepository.save(nuevoTablero);
 
@@ -72,6 +74,8 @@ public class BoardServiceImpl implements BoardService {
         // 2. Le delegamos T_ODO el trabajo al agregado pasándole solo los datos del comando
         board.addList(cmd.nombreLista(), cmd.maxCards());
 
+        board.registrarEvento("Lista añadida: " + cmd.nombreLista());
+        
         // 3. Guardamos el estado
         this.boardRepository.save(board);
     }
@@ -96,6 +100,8 @@ public class BoardServiceImpl implements BoardService {
         // Modificamos el estado del agregado
         board.defineListCompletadas(listId);
 
+        board.registrarEvento("Lista " + listId.value() + " configurada como completadas");
+        
         // Sincronizamos con el repositorio
         this.boardRepository.save(board);
     }
@@ -110,8 +116,10 @@ public class BoardServiceImpl implements BoardService {
         // Modificamos las invariantes según venga la bandera del comando
         if (cmd.bloquear()) {
             board.lock();
+            board.registrarEvento("Tablero bloqueado temporalmente");
         } else {
             board.unlock();
+            board.registrarEvento("Tablero desbloqueado");
         }
 
         // Persistimos los cambios

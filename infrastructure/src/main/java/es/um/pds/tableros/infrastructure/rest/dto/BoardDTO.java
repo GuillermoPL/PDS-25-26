@@ -9,6 +9,7 @@ public class BoardDTO {
     private boolean locked;
     private List<String> nombresListas; // Enviamos solo datos planos al exterior
     private String listCompletadasId;
+    private List<String> historial;
 
     // Constructor vacío obligatorio para Jackson (JSON)
     public BoardDTO() {}
@@ -31,4 +32,7 @@ public class BoardDTO {
 
     public String getListCompletadasId() { return listCompletadasId; }
     public void setListCompletadasId(String listCompletadasId) { this.listCompletadasId = listCompletadasId; }
+    
+    public List<String> getHistorial() { return historial; }
+    public void setHistorial(List<String> historial) { this.historial = historial; }
 }
