@@ -114,7 +114,9 @@ public class BoardServiceImpl implements BoardService {
         // Modificamos el estado del agregado
         board.defineListCompletadas(listId);
 
-        board.registrarEvento("Lista " + listId.value() + " configurada como completadas");
+        board.registrarEvento(
+        	    String.format("Lista '%s' configurada como completadas", board.obtenerNombreLista(listId))
+        	);
         
         // Sincronizamos con el repositorio
         this.boardRepository.save(board);
