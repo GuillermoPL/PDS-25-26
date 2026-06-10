@@ -11,7 +11,8 @@ import org.springframework.stereotype.Component;
 import es.um.pds.tableros.domain.card.CardType;
 import es.um.pds.tableros.domain.ports.input.card.CardService;
 import es.um.pds.tableros.domain.ports.input.card.commands.CrearCardCommand;
-
+import org.springframework.context.annotation.Scope;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -24,6 +25,7 @@ import java.util.ResourceBundle;
  * cierra el diálogo; el padre refresca el tablero al volver de {@code showAndWait()}.
  */
 @Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class NuevaTarjetaController implements Initializable {
 
     // ── Puerto de entrada inyectado por Spring ─────────────────────────────────
