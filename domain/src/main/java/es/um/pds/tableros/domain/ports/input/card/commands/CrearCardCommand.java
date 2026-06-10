@@ -1,4 +1,6 @@
 package es.um.pds.tableros.domain.ports.input.card.commands;
+import java.util.List;
+
 import es.um.pds.tableros.domain.card.Etiqueta;
 
 
@@ -8,5 +10,6 @@ public record CrearCardCommand(
     String listId,
     String titulo,
     String tipo, // "TASK" o "CHECKLIST"
-    Etiqueta etiqueta  // null si no se añade etiqueta
+    Etiqueta etiqueta,  // null si no se añade etiqueta
+    List<String> checklistItems
 ) {}

@@ -39,7 +39,7 @@ public class CardEndpoint {
                    .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-    // 2. Crear una nueva tarjeta
+ // 2. Crear una nueva tarjeta
     @PostMapping
     public ResponseEntity<CardDTO> createTarjeta(@RequestBody CardDTO dto) {
         log.info("Petición para crear tarjeta '{}' en la lista {}", dto.getTitulo(), dto.getListIdActual());
@@ -49,15 +49,26 @@ public class CardEndpoint {
         }
 
         try {
+            // Extraemos la etiqueta del DTO (si la hay, cogemos la primera)
+            es.um.pds.tableros.domain.card.Etiqueta etiquetaDominio = null;
+            if (dto.getEtiquetas() != null && !dto.getEtiquetas().isEmpty()) {
+                CardDTO.EtiquetaDTO etDto = dto.getEtiquetas().get(0);
+                etiquetaDominio = new es.um.pds.tableros.domain.card.Etiqueta(etDto.getNombre(), etDto.getColor());
+            }
+
+            // Creamos el comando
             CrearCardCommand cmd = new CrearCardCommand(
                 dto.getBoardId(), 
                 dto.getListIdActual(), 
                 dto.getTitulo(), 
                 dto.getTipo(),
-                null
+                etiquetaDominio,
+                dto.getChecklistItems()
             );
+            
             Card nuevaTarjeta = cardService.crearNuevaTarjeta(cmd);
             return ResponseEntity.status(HttpStatus.CREATED).body(cardMapper.toDTO(nuevaTarjeta));
+            
         } catch (IllegalArgumentException | IllegalStateException e) {
             log.error("Error al crear la tarjeta: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();

@@ -71,6 +71,12 @@ public class CardServiceImpl implements CardService {
         CardType tipo = CardType.valueOf(cmd.tipo().toUpperCase());
         
         Card nuevaTarjeta = new Card(nuevoCardId, bId, lId, cmd.titulo(), tipo);
+        if (cmd.checklistItems() != null && !cmd.checklistItems().isEmpty()) {
+            for (String itemText : cmd.checklistItems()) {
+                // Card ya valida que no sea de tipo TASK
+                nuevaTarjeta.anadirChecklistItem(itemText);
+            }
+        }
 
         if (cmd.etiqueta() != null) {
             // El requisito dice que la etiqueta tiene nombre y color. 
