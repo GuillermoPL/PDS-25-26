@@ -68,4 +68,5 @@ El repositorio refleja la separación física y estricta de las capas arquitect�
 
 ## 📚 Documentación Obligatoria y Enlaces de Interés
 
-Toda la documentación requerida para la evaluación se encuentra estructurada en el repositorio:
+* [**Historias de Usuario**](./docs/historias-de-usuario.md): Definición de los requisitos funcionales del sistema.
+* [**Créditos y participación**](./docs/CREDITOS.md): Detalle de la contribución de cada miembro.
