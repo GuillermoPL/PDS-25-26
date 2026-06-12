@@ -51,6 +51,7 @@ public class LoginController {
 
             // 2. Enviamos el correo
             SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom("guillermofparralopez@gmail.com");
             message.setTo(email);
             message.setSubject("Tu código de acceso a Tableros Kanban");
             message.setText("Tu código de acceso es: " + codigo + "\n\nSerá válido durante 5 minutos.");
