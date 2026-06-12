@@ -23,4 +23,9 @@ public interface BoardRepository {
      * Útil para cumplir el requisito de listado por usuario.
      */
     List<Board> findByEmail(String email);
+    
+    /**
+     * Recupera todos los tableros
+     */
+    List<Board> findAll();
 }

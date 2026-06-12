@@ -36,4 +36,12 @@ public class BoardRepositoryImpl implements BoardRepository {
                 .map(boardMapper::toModel)
                 .toList();
     }
+    
+    @Override
+    public List<Board> findAll() {
+        return springDataBoardRepository.findAll()
+                .stream()
+                .map(boardMapper::toModel)
+                .toList();
+    }
 }

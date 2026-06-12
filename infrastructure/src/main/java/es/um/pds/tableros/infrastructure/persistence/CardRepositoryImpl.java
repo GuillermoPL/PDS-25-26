@@ -37,4 +37,9 @@ public class CardRepositoryImpl implements CardRepository {
                 .map(cardMapper::toModel)
                 .toList();
     }
+    
+    @Override
+    public void delete(CardId id) {
+        springDataCardRepository.deleteById(id.value());
+    }
 }
