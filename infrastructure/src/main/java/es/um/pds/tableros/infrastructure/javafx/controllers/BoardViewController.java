@@ -32,7 +32,12 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
-
+import es.um.pds.tableros.domain.board.Rol;
+import es.um.pds.tableros.domain.ports.input.board.commands.CompartirBoardCommand;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Separator;
+import javafx.scene.control.ListView;
+import javafx.scene.Scene;
 @Component
 public class BoardViewController {
 
@@ -506,7 +511,118 @@ public class BoardViewController {
         filtroColorActual  = SIN_FILTRO_COLOR;
         renderizarTodo();
     }
+    
+    @FXML
+    public void handleCompartirTablero() {
+        Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.initOwner(obtenerVentanaPrincipal());
+        dialog.setTitle("Gestionar acceso al tablero");
 
+        VBox root = new VBox(12);
+        root.setPadding(new Insets(20));
+        root.setPrefWidth(400);
+
+        // 1. DECLARAR LA LISTA PRIMERO para que exista cuando el botón la necesite
+        ListView<String> listaPermisos = new ListView<>();
+        listaPermisos.setPrefHeight(180);
+
+        // ── Sección: compartir ────────────────────────────────────────────────
+        Label lblCompartir = new Label("Invitar a usuario");
+        lblCompartir.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+
+        TextField txtEmailInvitado = new TextField();
+        txtEmailInvitado.setPromptText("Email del invitado...");
+
+        ComboBox<String> cbRol = new ComboBox<>();
+        cbRol.getItems().addAll("WRITE", "READ");
+        cbRol.setValue("WRITE");
+
+        Button btnInvitar = new Button("Invitar");
+        btnInvitar.setStyle("-fx-background-color: #0079bf; -fx-text-fill: white; -fx-font-weight: bold;");
+
+        Label lblResultado = new Label();
+
+        // 2. AHORA EL BOTÓN PUEDE USAR LA LISTA
+        btnInvitar.setOnAction(e -> {
+            String emailInvitado = txtEmailInvitado.getText().trim();
+            String rol = cbRol.getValue();
+            String emailDueno = sceneManager.getCurrentUserEmail();
+
+            if (emailInvitado.isBlank()) {
+                lblResultado.setStyle("-fx-text-fill: #e74c3c;");
+                lblResultado.setText("Introduce el email del invitado.");
+                return;
+            }
+            try {
+                boardService.compartirTablero(
+                    new CompartirBoardCommand(boardIdActual, emailDueno, emailInvitado, rol));
+                lblResultado.setStyle("-fx-text-fill: #27ae60;");
+                lblResultado.setText("✓ Tablero compartido con " + emailInvitado);
+                txtEmailInvitado.clear();
+                
+                // ¡Ya no dará error!
+                actualizarListaPermisos(listaPermisos); 
+                
+            } catch (IllegalStateException ex) {
+                lblResultado.setStyle("-fx-text-fill: #e74c3c;");
+                lblResultado.setText("Solo el dueño puede compartir el tablero.");
+            } catch (IllegalArgumentException ex) {
+                lblResultado.setStyle("-fx-text-fill: #e74c3c;");
+                lblResultado.setText("Email inválido: " + ex.getMessage());
+            }
+        });
+
+        HBox filaInvitar = new HBox(8, txtEmailInvitado, cbRol, btnInvitar);
+        HBox.setHgrow(txtEmailInvitado, javafx.scene.layout.Priority.ALWAYS);
+
+        // ── Sección: usuarios con acceso ──────────────────────────────────────
+        Label lblAccesos = new Label("Usuarios con acceso");
+        lblAccesos.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+
+        // Llenamos la lista inicial
+        actualizarListaPermisos(listaPermisos);
+
+        Button btnRevocar = new Button("Revocar acceso seleccionado");
+        btnRevocar.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white;");
+        btnRevocar.setOnAction(e -> {
+            String seleccionado = listaPermisos.getSelectionModel().getSelectedItem();
+            if (seleccionado == null) return;
+            
+            String emailAEliminar = seleccionado.split(" — ")[0].trim();
+            String emailDueno = sceneManager.getCurrentUserEmail();
+            try {
+                boardService.revocarAcceso(boardIdActual, emailDueno, emailAEliminar);
+                lblResultado.setStyle("-fx-text-fill: #27ae60;");
+                lblResultado.setText("✓ Acceso revocado para " + emailAEliminar);
+                actualizarListaPermisos(listaPermisos);
+            } catch (IllegalStateException ex) {
+                lblResultado.setStyle("-fx-text-fill: #e74c3c;");
+                lblResultado.setText("No se puede revocar: " + ex.getMessage());
+            }
+        });
+
+        root.getChildren().addAll(
+            lblCompartir, filaInvitar, lblResultado,
+            new Separator(),
+            lblAccesos, listaPermisos, btnRevocar
+        );
+
+        dialog.setScene(new Scene(root));
+        dialog.showAndWait();
+    }
+
+    // ── Helper: rellena la ListView con los permisos actuales ─────────────────
+    private void actualizarListaPermisos(ListView<String> lista) {
+        boardService.obtenerTableroPorId(new BoardId(boardIdActual))
+            .ifPresent(board -> {
+                lista.getItems().setAll(
+                    board.getPermisos().entrySet().stream()
+                        .map(e -> e.getKey().value() + " — " + e.getValue().name())
+                        .toList()
+                );
+            });
+    }
     
     // ── Helpers ───────────────────────────────────────────────────────────────
     private void abrirDialogoNuevaTarjeta(String listId) {

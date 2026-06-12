@@ -31,4 +31,10 @@ public interface BoardService {
 
     // Bloquea o desbloquea el tablero según el flag del comando
     void cambiarEstadoBloqueo(CambiarBloqueoBoardCommand cmd);
+    
+    // Comparte el tablero con un usuario con un rol determinado
+    void compartirTablero(CompartirBoardCommand cmd);
+
+    // Revoca el acceso de un usuario
+    void revocarAcceso(String boardId, String emailSolicitante, String emailAEliminar);
 }

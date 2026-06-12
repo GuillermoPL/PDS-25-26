@@ -14,7 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import es.um.pds.tableros.domain.board.ListId;
 import es.um.pds.tableros.infrastructure.persistence.jpa.entity.BoardEntity;
 import es.um.pds.tableros.infrastructure.persistence.jpa.entity.TaskListEntity;
-
+import es.um.pds.tableros.domain.board.Rol;
+import java.util.Map;
 @Component
 public class BoardMapper {
 	@Autowired
@@ -103,6 +104,13 @@ public class BoardMapper {
                 .collect(Collectors.toList());
 
         boardEntity.setTasksLists(taskListEntities);
+     // Mapeamos los permisos del dominio (Map<Email, Rol>) a la entidad (Map<String, String>)
+        Map<String, String> permisosEntity = board.getPermisos().entrySet().stream()
+                .collect(Collectors.toMap(
+                        e -> e.getKey().value(),
+                        e -> e.getValue().name()
+                ));
+        boardEntity.setPermisos(permisosEntity);	
         return boardEntity;
     }
 
@@ -132,7 +140,12 @@ public class BoardMapper {
                   .map(taskListMapper::toModel)
                   .forEach(board::restoreTaskList);
         }
-
+     // Reconstruimos los permisos desde la entidad
+        if (entity.getPermisos() != null) {
+            entity.getPermisos().forEach((emailStr, rolStr) ->
+                board.restorePermiso(new Email(emailStr), Rol.valueOf(rolStr))
+            );
+        }
         return board;
     }
 }

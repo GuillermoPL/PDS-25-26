@@ -11,10 +11,12 @@ import es.um.pds.tableros.domain.board.Board;
 import es.um.pds.tableros.domain.board.BoardId;
 import es.um.pds.tableros.domain.board.Email;
 import es.um.pds.tableros.domain.board.ListId;
+import es.um.pds.tableros.domain.board.Rol;
 import es.um.pds.tableros.domain.board.TaskList;
 import es.um.pds.tableros.domain.ports.input.board.BoardService;
 import es.um.pds.tableros.domain.ports.input.board.commands.AnadirListCommand;
 import es.um.pds.tableros.domain.ports.input.board.commands.CambiarBloqueoBoardCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.CompartirBoardCommand;
 import es.um.pds.tableros.domain.ports.input.board.commands.CrearBoardCommand;
 import es.um.pds.tableros.domain.ports.input.board.commands.DefinirListCompletadasCommand;
 import es.um.pds.tableros.domain.ports.output.BoardRepository;
@@ -140,5 +142,41 @@ public class BoardServiceImpl implements BoardService {
 
         // Persistimos los cambios
         this.boardRepository.save(board);
+    }
+    
+    @Override
+    public void compartirTablero(CompartirBoardCommand cmd) {
+        log.info("Compartiendo tablero {} con {}", cmd.boardId(), cmd.emailInvitado());
+
+        Board board = boardRepository.findById(new BoardId(cmd.boardId()))
+                .orElseThrow(() -> new IllegalArgumentException("El tablero no existe"));
+
+        // Solo el dueño puede compartir
+        if (!board.getEmail().equals(new Email(cmd.emailSolicitante()))) {
+            throw new IllegalStateException("Solo el dueño puede compartir el tablero");
+        }
+
+        Rol rol = Rol.valueOf(cmd.rol().toUpperCase());
+        board.compartirCon(new Email(cmd.emailInvitado()), rol);
+        board.registrarEvento("Tablero compartido con " + cmd.emailInvitado() + " con rol " + rol);
+
+        boardRepository.save(board);
+    }
+
+    @Override
+    public void revocarAcceso(String boardId, String emailSolicitante, String emailAEliminar) {
+        log.info("Revocando acceso de {} al tablero {}", emailAEliminar, boardId);
+
+        Board board = boardRepository.findById(new BoardId(boardId))
+                .orElseThrow(() -> new IllegalArgumentException("El tablero no existe"));
+
+        if (!board.getEmail().equals(new Email(emailSolicitante))) {
+            throw new IllegalStateException("Solo el dueño puede revocar accesos");
+        }
+
+        board.revocarAcceso(new Email(emailAEliminar));
+        board.registrarEvento("Acceso revocado para " + emailAEliminar);
+
+        boardRepository.save(board);
     }
 }
