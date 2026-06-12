@@ -193,4 +193,9 @@ public class DashboardController {
             handleCargarTableros();
         });
     }
+    @FXML
+    public void handleCerrarSesion() {
+        // Esto vacía el currentUserEmail y nos devuelve a la pantalla inicial
+        sceneManager.navigateToLogin();
+    }
 }
