@@ -46,6 +46,14 @@ public class BoardMapper {
             dto.setListCompletadasId(board.getListCompletadas().value());
         }
         dto.setHistorial(board.getHistorial());
+        if (board.getPermisos() != null) {
+            Map<String, String> permisosDTO = board.getPermisos().entrySet().stream()
+                .collect(java.util.stream.Collectors.toMap(
+                    e -> e.getKey().value(),
+                    e -> e.getValue().name()
+                ));
+            dto.setPermisos(permisosDTO);
+        }
         return dto;
     }
 

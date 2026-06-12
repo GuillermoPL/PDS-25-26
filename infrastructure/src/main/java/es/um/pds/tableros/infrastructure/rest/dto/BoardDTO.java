@@ -1,6 +1,7 @@
 package es.um.pds.tableros.infrastructure.rest.dto;
 
 import java.util.List;
+import java.util.Map;
 
 public class BoardDTO {
     private String id;
@@ -11,6 +12,7 @@ public class BoardDTO {
     private String listCompletadasId;
     private List<String> historial;
     private List<ListaDTO> listas;
+    private Map<String, String> permisos;
     
     // Constructor vacío obligatorio para Jackson (JSON)
     public BoardDTO() {}
@@ -39,6 +41,9 @@ public class BoardDTO {
     
     public List<ListaDTO> getListas() { return listas; }
     public void setListas(List<ListaDTO> listas) { this.listas = listas; }
+    
+    public Map<String, String> getPermisos() { return permisos; }
+    public void setPermisos(Map<String, String> permisos) { this.permisos = permisos; }
     
     public static class ListaDTO {
         private String id;

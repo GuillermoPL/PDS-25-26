@@ -111,13 +111,31 @@ public class DashboardController {
             listTableros.getItems().clear();
 
             if (tablerosCargados.isEmpty()) {
-            	Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Sin resultados");
                 alert.setHeaderText(null);
-                alert.setContentText("No se ha creado ningún tablero para este correo.");
+                alert.setContentText("No se ha encontrado ningún tablero para este correo.");
                 alert.showAndWait();
             } else {
-                tablerosCargados.forEach(t -> listTableros.getItems().add(t.getTitulo()));
+                tablerosCargados.forEach(t -> {
+                    String etiquetaRol;
+                    
+                    // Comprobamos si el correo buscado es el del dueño
+                    if (email.equalsIgnoreCase(t.getEmail())) {
+                        etiquetaRol = "Propietario";
+                    } 
+                    // Si no es el dueño, buscamos su rol en el mapa de permisos
+                    else if (t.getPermisos() != null && t.getPermisos().containsKey(email)) {
+                        etiquetaRol = t.getPermisos().get(email);
+                    } 
+                    // Por seguridad, si hay un fallo y no está en ninguno
+                    else {
+                        etiquetaRol = "Acceso desconocido";
+                    }
+                    
+                    // Añadimos el título + el rol a la lista visual
+                    listTableros.getItems().add(t.getTitulo() + " — [" + etiquetaRol + "]");
+                });
             }
 
         } catch (IllegalArgumentException e) {
