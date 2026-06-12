@@ -29,8 +29,8 @@ public class JavaFXApplication extends Application {
         // 2. Le entregamos la ventana principal
         sceneManager.setPrimaryStage(primaryStage);
         
-        // 3. ¡Viajamos al Dashboard!
-        sceneManager.navigateToDashboard();
+        // 3. Ahora viajamos al Login primero
+        sceneManager.navigateToLogin();
     }
 
     @Override
