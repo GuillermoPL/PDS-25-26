@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import es.um.pds.tableros.domain.board.ListId;
+import es.um.pds.tableros.infrastructure.persistence.jpa.entity.AutomationRuleEmbeddable;
 import es.um.pds.tableros.infrastructure.persistence.jpa.entity.BoardEntity;
 import es.um.pds.tableros.infrastructure.persistence.jpa.entity.TaskListEntity;
 import es.um.pds.tableros.domain.board.Rol;
@@ -118,7 +119,13 @@ public class BoardMapper {
                         e -> e.getKey().value(),
                         e -> e.getValue().name()
                 ));
-        boardEntity.setPermisos(permisosEntity);	
+        boardEntity.setPermisos(permisosEntity);
+        if (board.getReglas() != null) {
+            List<AutomationRuleEmbeddable> reglasEntity = board.getReglas().stream()
+                .map(r -> new AutomationRuleEmbeddable(r.id(), r.triggerType().name(), r.triggerPayload(), r.actionType().name()))
+                .collect(Collectors.toList());
+            boardEntity.setReglas(reglasEntity);
+        }
         return boardEntity;
     }
 
@@ -153,6 +160,16 @@ public class BoardMapper {
             entity.getPermisos().forEach((emailStr, rolStr) ->
                 board.restorePermiso(new Email(emailStr), Rol.valueOf(rolStr))
             );
+        }
+        if (entity.getReglas() != null) {
+            List<es.um.pds.tableros.domain.board.AutomationRule> reglasDominio = entity.getReglas().stream()
+                .map(re -> new es.um.pds.tableros.domain.board.AutomationRule(
+                    re.getId(),
+                    es.um.pds.tableros.domain.board.TriggerType.valueOf(re.getTriggerType()),
+                    re.getTriggerPayload(),
+                    es.um.pds.tableros.domain.board.ActionType.valueOf(re.getActionType())
+                )).toList();
+            board.restoreReglas(reglasDominio);
         }
         return board;
     }

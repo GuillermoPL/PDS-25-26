@@ -37,4 +37,7 @@ public interface BoardService {
 
     // Revoca el acceso de un usuario
     void revocarAcceso(String boardId, String emailSolicitante, String emailAEliminar);
+    
+    // Añade una regla de automatización al tablero
+    void anadirReglaAutomatizacion(CrearReglaCommand cmd);
 }

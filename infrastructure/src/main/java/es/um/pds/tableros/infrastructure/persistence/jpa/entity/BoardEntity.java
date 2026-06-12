@@ -55,6 +55,10 @@ public class BoardEntity {
     @Enumerated(EnumType.STRING)  // Guarda "READ"/"WRITE" como texto
     private Map<String, String> permisos = new HashMap<>();
     
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "BOARD_REGLAS", joinColumns = @JoinColumn(name = "BOARD_ID"))
+    private List<AutomationRuleEmbeddable> reglas = new ArrayList<>();
+    
     public BoardEntity() {}
 
     public BoardEntity(String id, String titulo, String email, boolean isLocked, 
@@ -86,6 +90,8 @@ public class BoardEntity {
     public void setHistorial(List<String> historial) { this.historial = historial; }
     public Map<String, String> getPermisos() { return permisos; }
     public void setPermisos(Map<String, String> permisos) { this.permisos = permisos; }
+    public List<AutomationRuleEmbeddable> getReglas() { return reglas; }
+    public void setReglas(List<AutomationRuleEmbeddable> reglas) { this.reglas = reglas; }
     
     @Override
     public boolean equals(Object o) {

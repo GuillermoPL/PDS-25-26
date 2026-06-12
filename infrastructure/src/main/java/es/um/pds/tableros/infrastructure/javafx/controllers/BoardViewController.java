@@ -636,7 +636,112 @@ public class BoardViewController {
         dialog.setScene(new Scene(root));
         dialog.showAndWait();
     }
+    
+    @FXML
+    public void handleAutomatizaciones() {
+        if (!this.tienePermisoEscrituraActual) {
+            mostrarAlertaError("Permiso denegado", "Solo los usuarios con permiso de escritura pueden crear reglas.");
+            return;
+        }
 
+        Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.initOwner(obtenerVentanaPrincipal());
+        dialog.setTitle("Automatizaciones");
+
+        VBox root = new VBox(12);
+        root.setPadding(new Insets(20));
+        root.setPrefWidth(450);
+
+        // ── Formulario ────────────────────────────────────────────────
+        Label lblCrear = new Label("Crear nueva regla");
+        lblCrear.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+
+        HBox filaCondicion = new HBox(8);
+        filaCondicion.setStyle("-fx-alignment: CENTER_LEFT;");
+        Label lblSi = new Label("Si la tarjeta se mueve a:");
+        
+        ComboBox<String> cbListas = new ComboBox<>();
+        // Rellenar con las listas del tablero
+        boardService.obtenerTableroPorId(new BoardId(boardIdActual)).ifPresent(b -> {
+            cbListas.getItems().addAll(b.getTasksLists().stream().map(l -> l.getNombre()).toList());
+        });
+
+        filaCondicion.getChildren().addAll(lblSi, cbListas);
+
+        HBox filaAccion = new HBox(8);
+        filaAccion.setStyle("-fx-alignment: CENTER_LEFT;");
+        Label lblEntonces = new Label("Entonces:");
+        
+        ComboBox<String> cbAccion = new ComboBox<>();
+        cbAccion.getItems().addAll("MARCAR_COMO_COMPLETADA", "AÑADIR_ETIQUETA_ROJA");
+        
+        filaAccion.getChildren().addAll(lblEntonces, cbAccion);
+
+        Button btnCrear = new Button("Añadir Regla");
+        btnCrear.setStyle("-fx-background-color: #8e44ad; -fx-text-fill: white; -fx-font-weight: bold;");
+
+        Label lblResultado = new Label();
+
+        // ── Lista Actual ─────────────────────────────────────────────
+        Label lblActuales = new Label("Reglas activas");
+        lblActuales.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+
+        ListView<String> listaReglas = new ListView<>();
+        listaReglas.setPrefHeight(150);
+        actualizarListaReglas(listaReglas);
+
+        // Acción del botón
+        btnCrear.setOnAction(e -> {
+            String nombreLista = cbListas.getValue();
+            String accionStr = cbAccion.getValue();
+
+            if (nombreLista == null || accionStr == null) {
+                lblResultado.setStyle("-fx-text-fill: #e74c3c;");
+                lblResultado.setText("Selecciona una lista y una acción.");
+                return;
+            }
+
+            try {
+                // Buscamos el ID real de la lista seleccionada
+                es.um.pds.tableros.domain.board.Board b = boardService.obtenerTableroPorId(new BoardId(boardIdActual)).get();
+                String listId = b.getTasksLists().stream()
+                        .filter(l -> l.getNombre().equals(nombreLista))
+                        .findFirst().get().getId().value();
+
+                boardService.anadirReglaAutomatizacion(new es.um.pds.tableros.domain.ports.input.board.commands.CrearReglaCommand(
+                        boardIdActual, "TARJETA_MOVIDA_A_LISTA", listId, accionStr));
+                
+                lblResultado.setStyle("-fx-text-fill: #27ae60;");
+                lblResultado.setText("✓ Regla creada");
+                actualizarListaReglas(listaReglas);
+
+            } catch (Exception ex) {
+                lblResultado.setStyle("-fx-text-fill: #e74c3c;");
+                lblResultado.setText("Error: " + ex.getMessage());
+            }
+        });
+
+        root.getChildren().addAll(
+            lblCrear, filaCondicion, filaAccion, btnCrear, lblResultado,
+            new Separator(),
+            lblActuales, listaReglas
+        );
+
+        dialog.setScene(new Scene(root));
+        dialog.showAndWait();
+    }
+
+    private void actualizarListaReglas(ListView<String> lista) {
+        boardService.obtenerTableroPorId(new BoardId(boardIdActual)).ifPresent(board -> {
+            lista.getItems().setAll(
+                board.getReglas().stream()
+                    .map(r -> "Si se mueve a '" + board.obtenerNombreLista(new es.um.pds.tableros.domain.board.ListId(r.triggerPayload())) + 
+                              "' ➔ " + r.actionType().name())
+                    .toList()
+            );
+        });
+    }
     // ── Helper: rellena la ListView con los permisos actuales ─────────────────
     private void actualizarListaPermisos(ListView<String> lista) {
         boardService.obtenerTableroPorId(new BoardId(boardIdActual))
