@@ -36,7 +36,13 @@ public class SceneManager {
     public void setPrimaryStage(Stage stage) {
         this.primaryStage = stage;
     }
-
+    /**
+     * Cambia la ventana a la pantalla de Login y limpia la sesión actual.
+     */
+    public void navigateToLogin() {
+        this.currentUserEmail = null; // Limpiamos la sesión
+        cambiarEscena("/fxml/Login.fxml", "Iniciar Sesión - Tableros Kanban");
+    }
     /**
      * Cambia la ventana a la pantalla del Dashboard.
      */

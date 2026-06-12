@@ -37,12 +37,13 @@ public class DashboardController {
     }
     @FXML
     public void initialize() {
-        // Al volver al Dashboard, comprobamos si ya hay un email guardado en la sesión
         String emailGuardado = sceneManager.getCurrentUserEmail();
-        if (emailGuardado != null && !emailGuardado.isBlank()) {
-            txtEmail.setText(emailGuardado);
-            handleCargarTableros(); // Cargamos los tableros automáticamente
-        }
+        // Ponemos el texto en el campo (puedes ponerlo deshabilitado para que no lo cambien)
+        txtEmail.setText(emailGuardado); 
+        txtEmail.setDisable(true); // Bloqueamos el campo para que no busquen los tableros de otro sin permiso
+        
+        // Cargamos los tableros de ese usuario automáticamente
+        handleCargarTableros(); 
     }
     @FXML
     public void handleCrearTablero() {
