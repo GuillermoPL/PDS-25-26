@@ -65,11 +65,21 @@ public class LoginController {
             lblMensaje.setStyle("-fx-text-fill: #27ae60;"); // Verde
 
         } catch (Exception e) {
-            lblMensaje.setText("Error al enviar el correo: " + e.getMessage());
-            lblMensaje.setStyle("-fx-text-fill: #e74c3c;");
-            btnSolicitar.setDisable(false);
-            btnSolicitar.setText("Solicitar Código");
-        }
+            System.err.println("=== ERROR ENVIO CORREO ===");
+            e.printStackTrace();
+
+            Throwable causa = e;
+            while (causa != null) {
+                System.err.println(
+                    causa.getClass().getName() +
+                    ": " +
+                    causa.getMessage()
+                );
+                causa = causa.getCause();
+            }
+
+            lblMensaje.setText("Error al enviar correo. Mira la consola.");
+        }   
     }
 
     @FXML
