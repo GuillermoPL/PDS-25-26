@@ -28,6 +28,7 @@
             <Button text="Historial" onAction="#handleVerHistorial" style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white;"/>
            <Button text="👥 Compartir" onAction="#handleCompartirTablero" 
         style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white;"/>
+        <Button text="🤖 Automatizaciones" onAction="#handleAutomatizaciones" style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white;"/>
             <Button text="..." onAction="#handleAjustesTablero" style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;"/>
            
             <Label text="Filtros:" textFill="white" style="-fx-font-weight: bold;"/>

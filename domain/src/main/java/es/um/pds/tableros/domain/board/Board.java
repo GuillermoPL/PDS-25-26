@@ -2,8 +2,8 @@ package es.um.pds.tableros.domain.board;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 public class Board {
     private final BoardId id;
@@ -14,6 +14,7 @@ public class Board {
     private ListId listCompletadas; // Lista especial para completadas
     private final List<String> historial = new ArrayList<>();
     private final Map<Email, Rol> permisos = new HashMap<>();
+    private final List<AutomationRule> reglas = new ArrayList<>();
     
     public Board(BoardId id, String titulo, Email email) {
         this.id = id;
@@ -47,6 +48,21 @@ public class Board {
     }
     public Map<Email, Rol> getPermisos() {
         return Collections.unmodifiableMap(permisos);
+    }
+    public List<AutomationRule> getReglas() {
+        return Collections.unmodifiableList(reglas);
+    }
+    
+    // Y ya que estamos, añade también el método para que se puedan meter reglas:
+    public void anadirRegla(AutomationRule regla) {
+        this.reglas.add(regla);
+    }
+    
+    // Método para el mapper:
+    public void restoreReglas(List<AutomationRule> reglasCargadas) {
+        if (reglasCargadas != null) {
+            this.reglas.addAll(reglasCargadas);
+        }
     }
     //Métodos
     public TaskList addList(String nombre, Integer maxCards) {

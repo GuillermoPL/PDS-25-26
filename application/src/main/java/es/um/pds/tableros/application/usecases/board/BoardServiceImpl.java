@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import es.um.pds.tableros.domain.board.AutomationRule;
 import es.um.pds.tableros.domain.board.Board;
 import es.um.pds.tableros.domain.board.BoardId;
 import es.um.pds.tableros.domain.board.Email;
@@ -18,6 +19,7 @@ import es.um.pds.tableros.domain.ports.input.board.commands.AnadirListCommand;
 import es.um.pds.tableros.domain.ports.input.board.commands.CambiarBloqueoBoardCommand;
 import es.um.pds.tableros.domain.ports.input.board.commands.CompartirBoardCommand;
 import es.um.pds.tableros.domain.ports.input.board.commands.CrearBoardCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.CrearReglaCommand;
 import es.um.pds.tableros.domain.ports.input.board.commands.DefinirListCompletadasCommand;
 import es.um.pds.tableros.domain.ports.output.BoardRepository;
 
@@ -176,6 +178,26 @@ public class BoardServiceImpl implements BoardService {
 
         board.revocarAcceso(new Email(emailAEliminar));
         board.registrarEvento("Acceso revocado para " + emailAEliminar);
+
+        boardRepository.save(board);
+    }
+    
+    @Override
+    public void anadirReglaAutomatizacion(CrearReglaCommand cmd) {
+        log.info("Añadiendo automatización al tablero {}", cmd.boardId());
+
+        Board board = boardRepository.findById(new BoardId(cmd.boardId()))
+                .orElseThrow(() -> new IllegalArgumentException("El tablero no existe"));
+
+        AutomationRule regla = new AutomationRule(
+            java.util.UUID.randomUUID().toString(),
+            es.um.pds.tableros.domain.board.TriggerType.valueOf(cmd.triggerType()),
+            cmd.triggerPayload(),
+            es.um.pds.tableros.domain.board.ActionType.valueOf(cmd.actionType())
+        );
+
+        board.anadirRegla(regla);
+        board.registrarEvento("Nueva regla de automatización creada");
 
         boardRepository.save(board);
     }
