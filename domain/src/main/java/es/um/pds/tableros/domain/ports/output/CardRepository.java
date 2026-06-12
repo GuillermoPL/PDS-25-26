@@ -12,4 +12,5 @@ public interface CardRepository {
     void save(Card card);
     Optional<Card> findById(CardId id);
     List<Card> findByBoardId(BoardId boardId);
+    void delete(CardId id);
 }

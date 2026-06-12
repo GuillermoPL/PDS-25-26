@@ -2,6 +2,8 @@ package es.um.pds.tableros.domain.card;
 
 import es.um.pds.tableros.domain.board.BoardId;
 import es.um.pds.tableros.domain.board.ListId;
+
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,6 +19,7 @@ public class Card {
     
     private final List<Etiqueta> etiquetas;
     private final List<String> checklistItems; // Elementos si es de tipo CHECKLIST
+    private final LocalDate fechaCreacion;
 
     public Card(CardId id, BoardId boardId, ListId ListIdActual, String titulo, CardType tipo) {
         this.id = id;
@@ -27,6 +30,7 @@ public class Card {
         this.isCompletada = false;
         this.etiquetas = new ArrayList<>();
         this.checklistItems = new ArrayList<>();
+        this.fechaCreacion = LocalDate.now();
     }
 
     // Getters
@@ -87,6 +91,13 @@ public class Card {
 
     public void eliminarEtiqueta(Etiqueta etiqueta) {
         this.etiquetas.remove(etiqueta);
+    }
+    
+    /**
+     * Verifica si la tarjeta se creó hace más días de los indicados.
+     */
+    public boolean esAntigua(int diasLimite) {
+        return this.fechaCreacion.isBefore(LocalDate.now().minusDays(diasLimite));
     }
     
     @Override
