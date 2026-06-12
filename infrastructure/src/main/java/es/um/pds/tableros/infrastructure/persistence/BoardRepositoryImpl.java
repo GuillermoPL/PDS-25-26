@@ -31,8 +31,7 @@ public class BoardRepositoryImpl implements BoardRepository {
 
     @Override
     public List<Board> findByEmail(String email) {
-        return springDataBoardRepository.findByEmail(email)
-                .stream()
+        return springDataBoardRepository.findByEmailOrSharedWith(email).stream()
                 .map(boardMapper::toModel)
                 .toList();
     }

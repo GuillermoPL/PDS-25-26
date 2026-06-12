@@ -63,6 +63,7 @@ public class BoardViewController {
     // ── Estado ────────────────────────────────────────────────────────────────
     private String  boardIdActual;
     private boolean estadoBloqueoActual;
+    private boolean tienePermisoEscrituraActual;
     private String  filtroNombreActual = SIN_FILTRO_NOMBRE;
     private String  filtroColorActual  = SIN_FILTRO_COLOR;
     private String listCompletadasId;
@@ -93,7 +94,10 @@ public class BoardViewController {
         BoardDTO tablero = boardService.obtenerTableroPorId(new BoardId(boardIdActual))
                 .map(boardMapper::toDTO)
                 .orElseThrow(() -> new IllegalArgumentException("Tablero no encontrado"));
-
+        String emailUsuario = sceneManager.getCurrentUserEmail();
+        es.um.pds.tableros.domain.board.Board tableroDominio = boardService.obtenerTableroPorId(new BoardId(boardIdActual)).get();
+        Rol rol = tableroDominio.obtenerRol(new es.um.pds.tableros.domain.board.Email(emailUsuario));
+        this.tienePermisoEscrituraActual = Rol.WRITE.equals(rol);
         List<CardDTO> todasLasTarjetas = cardService
                 .obtenerTarjetasPorTablero(new BoardId(boardIdActual))
                 .stream().map(cardMapper::toDTO).toList();
@@ -287,16 +291,17 @@ public class BoardViewController {
 		Button btnAnadirTarjeta = new Button("+ Añadir tarjeta");
 		btnAnadirTarjeta.setMaxWidth(Double.MAX_VALUE);
 		btnAnadirTarjeta.setStyle("-fx-background-color: rgba(0,0,0,0.08); -fx-cursor: hand;");
-		btnAnadirTarjeta.setDisable(this.estadoBloqueoActual);
+		btnAnadirTarjeta.setDisable(this.estadoBloqueoActual || !this.tienePermisoEscrituraActual);
 		btnAnadirTarjeta.setOnAction(e -> abrirDialogoNuevaTarjeta(listId));
 		columna.getChildren().add(btnAnadirTarjeta);
 		
 		columna.setOnDragOver(event -> {
-			if (event.getGestureSource() != columna && event.getDragboard().hasString()) {
-				event.acceptTransferModes(TransferMode.MOVE);
-			}
-			event.consume();
-		});
+            // Solo permite el "DragOver" si tiene permisos
+            if (this.tienePermisoEscrituraActual && event.getGestureSource() != columna && event.getDragboard().hasString()) {
+                event.acceptTransferModes(TransferMode.MOVE);
+            }
+            event.consume();
+        });
 		
 		columna.setOnDragDropped(event -> {
 			Dragboard db = event.getDragboard();
@@ -395,7 +400,7 @@ public class BoardViewController {
             tarjetaVisual.getChildren().add(badge);
         }
 
-        if (!tarjeta.isCompletada() && listCompletadasId != null) {
+        if (!tarjeta.isCompletada() && listCompletadasId != null && this.tienePermisoEscrituraActual) {
             Button btnCompletar = new Button("✓ Completar");
             btnCompletar.setStyle(
                 "-fx-background-color: #27ae60; -fx-text-fill: white; " +
@@ -413,6 +418,10 @@ public class BoardViewController {
         }
 
         tarjetaVisual.setOnDragDetected(event -> {
+        	if (!this.tienePermisoEscrituraActual || this.estadoBloqueoActual) {
+                event.consume();
+                return;
+            }
             Dragboard db = tarjetaVisual.startDragAndDrop(TransferMode.MOVE);
             ClipboardContent content = new ClipboardContent();
             content.putString(tarjeta.getId());
@@ -432,6 +441,10 @@ public class BoardViewController {
     
     @FXML
     public void handleAlternarBloqueo() {
+    	if (!this.tienePermisoEscrituraActual) {
+            mostrarAlertaError("Permiso denegado", "Solo los usuarios con permiso de escritura pueden realizar esta acción.");
+            return;
+        }
         try {
             CambiarBloqueoBoardCommand cmd =
                 new CambiarBloqueoBoardCommand(boardIdActual, !this.estadoBloqueoActual);
@@ -444,6 +457,10 @@ public class BoardViewController {
 
     @FXML
     public void handleAnadirListaVentana() {
+    	if (!this.tienePermisoEscrituraActual) {
+            mostrarAlertaError("Permiso denegado", "Solo los usuarios con permiso de escritura pueden realizar esta acción.");
+            return;
+        }
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/AnadirLista.fxml"));
             loader.setControllerFactory(springContext::getBean);
@@ -464,6 +481,10 @@ public class BoardViewController {
     
     @FXML
     public void handleAjustesTablero() {
+    	if (!this.tienePermisoEscrituraActual) {
+            mostrarAlertaError("Permiso denegado", "Solo los usuarios con permiso de escritura pueden realizar esta acción.");
+            return;
+        }
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/DefinirCompletadas.fxml"));
             loader.setControllerFactory(springContext::getBean);
@@ -514,6 +535,10 @@ public class BoardViewController {
     
     @FXML
     public void handleCompartirTablero() {
+    	if (!this.tienePermisoEscrituraActual) {
+            mostrarAlertaError("Permiso denegado", "Solo los usuarios con permiso de escritura pueden realizar esta acción.");
+            return;
+        }
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.initOwner(obtenerVentanaPrincipal());
