@@ -14,7 +14,11 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.CascadeType;
-
+import java.util.HashMap;
+import java.util.Map;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 @Entity
 @Table(name = "BOARD")
 public class BoardEntity {
@@ -42,6 +46,14 @@ public class BoardEntity {
     @CollectionTable(name = "BOARD_HISTORIAL", joinColumns = @JoinColumn(name = "BOARD_ID"))
     @Column(name = "EVENTO")
     private List<String> historial = new ArrayList<>();
+    
+ // Nuevo campo en BoardEntity, junto a los demás @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "BOARD_PERMISOS", joinColumns = @JoinColumn(name = "BOARD_ID"))
+    @MapKeyColumn(name = "EMAIL_USUARIO")
+    @Column(name = "ROL")
+    @Enumerated(EnumType.STRING)  // Guarda "READ"/"WRITE" como texto
+    private Map<String, String> permisos = new HashMap<>();
     
     public BoardEntity() {}
 
@@ -72,6 +84,8 @@ public class BoardEntity {
     public void setTasksLists(List<TaskListEntity> tasksLists) { this.tasksLists = tasksLists; }
     public List<String> getHistorial() { return historial; }
     public void setHistorial(List<String> historial) { this.historial = historial; }
+    public Map<String, String> getPermisos() { return permisos; }
+    public void setPermisos(Map<String, String> permisos) { this.permisos = permisos; }
     
     @Override
     public boolean equals(Object o) {

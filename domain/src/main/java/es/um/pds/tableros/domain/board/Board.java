@@ -3,7 +3,8 @@ package es.um.pds.tableros.domain.board;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
+import java.util.HashMap;
+import java.util.Map;
 public class Board {
     private final BoardId id;
     private String titulo;
@@ -12,6 +13,7 @@ public class Board {
     private final List<TaskList> tasksLists;
     private ListId listCompletadas; // Lista especial para completadas
     private final List<String> historial = new ArrayList<>();
+    private final Map<Email, Rol> permisos = new HashMap<>();
     
     public Board(BoardId id, String titulo, Email email) {
         this.id = id;
@@ -43,7 +45,9 @@ public class Board {
     public ListId getListCompletadas() { 
     	return listCompletadas; 
     }
-    
+    public Map<Email, Rol> getPermisos() {
+        return Collections.unmodifiableMap(permisos);
+    }
     //Métodos
     public TaskList addList(String nombre, Integer maxCards) {
         if (isLocked) {
@@ -159,6 +163,30 @@ public class Board {
 			                  .orElse("Lista desconocida");
 	}
    
+    public void compartirCon(Email usuario, Rol rol) {
+        if (usuario.equals(this.email)) {
+            throw new IllegalArgumentException("El dueño ya tiene acceso total al tablero");
+        }
+        this.permisos.put(usuario, rol);
+    }
+    
+    public void revocarAcceso(Email usuario) {
+        if (usuario.equals(this.email)) {
+            throw new IllegalArgumentException("No se puede revocar el acceso al dueño del tablero");
+        }
+        this.permisos.remove(usuario);
+    }
+    
+    public void restorePermiso(Email email, Rol rol) {
+        this.permisos.put(email, rol);
+    }
+    
+    public Rol obtenerRol(Email usuario) {
+        if (usuario.equals(this.email)) {
+            return Rol.WRITE; // El dueño siempre tiene acceso total implícito
+        }
+        return this.permisos.getOrDefault(usuario, null); // null = sin acceso
+    }
     @Override
     public boolean equals(Object o) {
         if (this == o) {

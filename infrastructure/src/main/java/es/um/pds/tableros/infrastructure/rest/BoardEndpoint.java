@@ -11,11 +11,13 @@ import org.springframework.web.bind.annotation.*;
 
 import es.um.pds.tableros.domain.board.Board;
 import es.um.pds.tableros.domain.board.BoardId;
+import es.um.pds.tableros.domain.board.Email;
 import es.um.pds.tableros.domain.ports.input.board.BoardService;
 import es.um.pds.tableros.domain.ports.input.board.commands.*;
 import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
 import es.um.pds.tableros.infrastructure.mappers.BoardMapper; 
-
+import es.um.pds.tableros.domain.board.Rol;
+import es.um.pds.tableros.domain.ports.input.board.commands.CompartirBoardCommand;
 @RestController
 @RequestMapping("/api/v1/tableros") // Puedes parametrizarlo con ${...} si quieres
 public class BoardEndpoint {
@@ -32,12 +34,22 @@ public class BoardEndpoint {
 
     // 1. Obtener un tablero por ID
     @GetMapping("/{id}")
-    public ResponseEntity<BoardDTO> getTablero(@PathVariable String id) {
-        log.info("Buscando tablero con ID: {}", id);
+    public ResponseEntity<BoardDTO> getTablero(
+            @PathVariable String id,
+            @RequestHeader(value = "X-User-Email", required = false) String emailUsuario) {
         try {
-            Optional<Board> board = boardService.obtenerTableroPorId(new BoardId(id));
-            return board.map(b -> ResponseEntity.ok(boardMapper.toDTO(b)))
-                        .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+            Optional<Board> boardOpt = boardService.obtenerTableroPorId(new BoardId(id));
+            if (boardOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+            Board board = boardOpt.get();
+
+            // Verificamos que quien pide tiene al menos rol READ
+            if (emailUsuario == null || board.obtenerRol(new Email(emailUsuario)) == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            return ResponseEntity.ok(boardMapper.toDTO(board));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
@@ -64,12 +76,20 @@ public class BoardEndpoint {
     // 3. Añadir una lista/columna al tablero
     // Petición POST a /api/v1/tableros/{id}/listas pasándole un JSON con el nombre y límite max
     @PostMapping("/{id}/listas")
-    public ResponseEntity<Void> anadirLista(@PathVariable String id, @RequestBody AnadirListCommandPayload payload) {
-        log.info("Añadiendo lista al tablero {}", id);
+    public ResponseEntity<Void> anadirLista(
+            @PathVariable String id,
+            @RequestHeader(value = "X-User-Email", required = false) String emailUsuario,
+            @RequestBody AnadirListCommandPayload payload) {
         try {
+            Board board = boardService.obtenerTableroPorId(new BoardId(id))
+                    .orElse(null);
+            if (board == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            if (!tienePermisoEscritura(board, emailUsuario)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
             AnadirListCommand cmd = new AnadirListCommand(id, payload.nombreLista(), payload.maxCards());
             boardService.anadirListaATablero(cmd);
-            return ResponseEntity.status(HttpStatus.OK).build();
+            return ResponseEntity.ok().build();
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
@@ -77,17 +97,60 @@ public class BoardEndpoint {
 
     // 4. Cambiar estado de bloqueo (Bloquear/Desbloquear)
     @PutMapping("/{id}/bloqueo")
-    public ResponseEntity<Void> cambiarBloqueo(@PathVariable String id, @RequestParam boolean bloquear) {
-        log.info("Cambiando bloqueo del tablero {} a {}", id, bloquear);
+    public ResponseEntity<Void> cambiarBloqueo(
+            @PathVariable String id,
+            @RequestHeader(value = "X-User-Email", required = false) String emailUsuario,
+            @RequestParam boolean bloquear) {
         try {
-            CambiarBloqueoBoardCommand cmd = new CambiarBloqueoBoardCommand(id, bloquear);
-            boardService.cambiarEstadoBloqueo(cmd);
+            Board board = boardService.obtenerTableroPorId(new BoardId(id))
+                    .orElse(null);
+            if (board == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            if (!tienePermisoEscritura(board, emailUsuario)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            boardService.cambiarEstadoBloqueo(new CambiarBloqueoBoardCommand(id, bloquear));
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
+ // POST /api/v1/tableros/{id}/permisos  → compartir con alguien
+    @PostMapping("/{id}/permisos")
+    public ResponseEntity<Void> compartirTablero(
+            @PathVariable String id,
+            @RequestHeader("X-User-Email") String emailSolicitante,
+            @RequestBody PermisosPayload payload) {
+        try {
+            CompartirBoardCommand cmd = new CompartirBoardCommand(
+                    id, emailSolicitante, payload.emailInvitado(), payload.rol());
+            boardService.compartirTablero(cmd);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
 
+    // DELETE /api/v1/tableros/{id}/permisos/{email}  → revocar acceso
+    @DeleteMapping("/{id}/permisos/{emailAEliminar}")
+    public ResponseEntity<Void> revocarAcceso(
+            @PathVariable String id,
+            @PathVariable String emailAEliminar,
+            @RequestHeader("X-User-Email") String emailSolicitante) {
+        try {
+            boardService.revocarAcceso(id, emailSolicitante, emailAEliminar);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    // Record auxiliar
+    public record PermisosPayload(String emailInvitado, String rol) {}
     // Sub-record auxiliar para leer el cuerpo HTTP al crear listas de forma limpia
     public record AnadirListCommandPayload(String nombreLista, Integer maxCards) {}
+    private boolean tienePermisoEscritura(Board board, String emailUsuario) {
+        if (emailUsuario == null) return false;
+        Rol rol = board.obtenerRol(new Email(emailUsuario));
+        return Rol.WRITE.equals(rol);
+    }
 }
