@@ -1,12 +1,12 @@
 package es.um.pds.tableros.domain.card;
 
-import es.um.pds.tableros.domain.board.BoardId;
-import es.um.pds.tableros.domain.board.ListId;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import es.um.pds.tableros.domain.board.BoardId;
+import es.um.pds.tableros.domain.board.ListId;
 
 public class Card {
     private final CardId id;

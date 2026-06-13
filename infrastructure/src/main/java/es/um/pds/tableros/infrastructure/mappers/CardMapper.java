@@ -3,16 +3,16 @@ package es.um.pds.tableros.infrastructure.mappers;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
+
 import es.um.pds.tableros.domain.board.BoardId;
 import es.um.pds.tableros.domain.board.ListId;
 import es.um.pds.tableros.domain.card.Card;
 import es.um.pds.tableros.domain.card.CardId;
 import es.um.pds.tableros.domain.card.CardType;
 import es.um.pds.tableros.domain.card.Etiqueta;
-import es.um.pds.tableros.infrastructure.rest.dto.CardDTO;
-
 import es.um.pds.tableros.infrastructure.persistence.jpa.entity.CardEntity;
 import es.um.pds.tableros.infrastructure.persistence.jpa.entity.EtiquetaEmbeddable;
+import es.um.pds.tableros.infrastructure.rest.dto.CardDTO;
 @Component
 public class CardMapper {
 

@@ -1,5 +1,7 @@
 package es.um.pds.tableros.application.usecases.board;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -9,8 +11,6 @@ import es.um.pds.tableros.domain.card.Card;
 import es.um.pds.tableros.domain.ports.input.board.CompactacionTablerosService;
 import es.um.pds.tableros.domain.ports.output.BoardRepository;
 import es.um.pds.tableros.domain.ports.output.CardRepository;
-
-import java.util.List;
 
 @Service
 public class CompactacionTablerosServiceImpl implements CompactacionTablerosService {

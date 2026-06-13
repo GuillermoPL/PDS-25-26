@@ -1,12 +1,11 @@
 package es.um.pds.tableros.domain.ports.output;
 
+import java.util.List;
 import java.util.Optional;
 
 import es.um.pds.tableros.domain.board.BoardId;
 import es.um.pds.tableros.domain.card.Card;
 import es.um.pds.tableros.domain.card.CardId;
-
-import java.util.List;
 
 public interface CardRepository {
     void save(Card card);

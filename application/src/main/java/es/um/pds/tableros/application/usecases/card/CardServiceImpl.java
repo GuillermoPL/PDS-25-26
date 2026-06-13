@@ -5,8 +5,8 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
 
 import es.um.pds.tableros.application.usecases.events.CardMovidaEvent;
 import es.um.pds.tableros.domain.board.Board;
@@ -17,14 +17,14 @@ import es.um.pds.tableros.domain.board.Rol;
 import es.um.pds.tableros.domain.card.Card;
 import es.um.pds.tableros.domain.card.CardId;
 import es.um.pds.tableros.domain.card.CardType;
+import es.um.pds.tableros.domain.card.Etiqueta;
 import es.um.pds.tableros.domain.ports.input.card.CardService;
+import es.um.pds.tableros.domain.ports.input.card.commands.AnadirEtiquetaCommand;
 import es.um.pds.tableros.domain.ports.input.card.commands.CrearCardCommand;
 import es.um.pds.tableros.domain.ports.input.card.commands.MoverCardCommand;
-import es.um.pds.tableros.domain.ports.input.card.commands.AnadirEtiquetaCommand;
+import es.um.pds.tableros.domain.ports.output.BoardRepository;
 import es.um.pds.tableros.domain.ports.output.CardRepository;
-import es.um.pds.tableros.domain.ports.output.BoardRepository; 
 import es.um.pds.tableros.domain.services.CardMovementService;
-import es.um.pds.tableros.domain.card.Etiqueta;
 
 @Service
 public class CardServiceImpl implements CardService {

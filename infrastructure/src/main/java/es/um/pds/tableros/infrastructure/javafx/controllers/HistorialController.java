@@ -1,14 +1,15 @@
 package es.um.pds.tableros.infrastructure.javafx.controllers;
 
+import java.util.List;
+
+import org.springframework.stereotype.Component;
+
+import es.um.pds.tableros.domain.ports.input.board.BoardService;
+import es.um.pds.tableros.infrastructure.mappers.BoardMapper;
+import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.stage.Stage;
-import org.springframework.stereotype.Component;
-import es.um.pds.tableros.infrastructure.mappers.BoardMapper;
-import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
-import es.um.pds.tableros.domain.ports.input.board.BoardService;
-
-import java.util.List;
 
 @Component
 public class HistorialController {
