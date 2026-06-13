@@ -2,7 +2,7 @@ package es.um.pds.tableros.infrastructure.rest;
 
 import org.springframework.web.bind.annotation.*;
 
-import es.um.pds.tableros.infraestructure.security.AuthSessionManager;
+import es.um.pds.tableros.infrastructure.security.AuthSessionManager;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
