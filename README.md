@@ -1,11 +1,12 @@
 # 📋 PDS 2025/26: Tableros Colaborativos (Clon de Trello)
 
-![Java](https://img.shields.io/badge/Java-orange)
+![Java](https://img.shields.io/badge/Java-21-orange)
 ![Build](https://img.shields.io/badge/Build-Maven-blue)
 ![Architecture](https://img.shields.io/badge/Architecture-Hexagonal_DDD-green)
-![Backend](https://img.shields.io/badge/Backend-Spring_Boot-lightgrey)
+![Backend](https://img.shields.io/badge/Backend-Spring_Boot_3.2-lightgrey)
+![UI](https://img.shields.io/badge/UI-JavaFX-purple)
 
-Proyecto práctico para la construcción de un sistema de gestión de trabajo colaborativo basado en tableros Kanban, inspirado fuertemente en Trello. Desarrollado bajo los principios de **Arquitectura Hexagonal** y **Domain-Driven Design (DDD)**.
+Proyecto práctico para la construcción de un sistema de gestión de trabajo colaborativo basado en tableros Kanban, inspirado fuertemente en Trello. Desarrollado bajo los más estrictos principios de **Arquitectura Hexagonal (Puertos y Adaptadores)** y **Domain-Driven Design (DDD)**.
 
 Asignatura: **Procesos de desarrollo de software 2025/26**.
 
@@ -21,52 +22,64 @@ Asignatura: **Procesos de desarrollo de software 2025/26**.
 
 ---
 
-## 📝 Descripción del Sistema
+## 📝 Descripción del Sistema y Características
 
-Aplicación de gestión de proyectos mediante tableros y tareas. El sistema permite organizar el trabajo mediante tarjetas que fluyen a través de listas personalizables, garantizando la persistencia de datos y un diseño orientado al dominio.
+Aplicación de gestión de proyectos mediante tableros y tareas. El sistema permite organizar el trabajo mediante tarjetas que fluyen a través de listas personalizables, garantizando la persistencia de datos y un diseño orientado al dominio puro.
 
-### Características Básicas
-* **Gestión de Tableros:** Creación mediante correo electrónico obteniendo una URL única y pública.
-* **Organización:** Creación de listas de tareas dentro de los tableros.
-* **Tarjetas:** Soporte para tareas simples y *checklists*.
-* **Clasificación:** Uso de etiquetas de diferentes colores para identificar las tarjetas.
-* **Trazabilidad:** Registro histórico de los movimientos de las tarjetas entre listas.
-* **Control de Flujo:** Bloqueo temporal de tableros (permite mover tarjetas existentes, pero no crear nuevas).
+### 🔹 Características Básicas (Core)
+* **Gestión de Tableros:** Creación de tableros asociados a un correo electrónico (identidad principal del sistema).
+* **Listas y Flujo:** Creación de listas de tareas (columnas) dentro de los tableros.
+* **Tarjetas enriquecidas:** Soporte para tarjetas de tipo *Tarea* simple y *Checklist* (ítems de verificación).
+* **Clasificación y Completadas:** Uso de etiquetas (nombre y color) para identificar tarjetas y posibilidad de enviarlas automáticamente a una lista designada de "Completadas".
+* **Trazabilidad:** Registro en el historial del tablero de todos los eventos y movimientos de las tarjetas.
+* **Control de Tablero:** Bloqueo temporal de tableros por parte del dueño (impide la creación de nuevas tarjetas o listas, permitiendo solo el movimiento de las existentes).
 
-### Características Opcionales Implementadas
-* **Reglas a nivel de lista (Fácil):** Restricción del límite de N ítems por lista.
-* **Reglas de flujo (Fácil):** Definición de rutas obligatorias para las tarjetas entre listas.
-* **Plantillas (Fácil):** Creación de tableros preconfigurados a través de ficheros YAML.
-* **Filtrado (Fácil):** Búsqueda y filtrado visual de tarjetas por sus etiquetas.
+### ⭐ Características Opcionales Implementadas (7/7)
+Se ha superado el requisito de 4 características opcionales para la nota máxima, implementando la totalidad de las propuestas:
 
----
-
-## 🏗 Arquitectura y Stack Tecnológico
-
-El proyecto abandona el patrón MVC tradicional en favor de una **Arquitectura Hexagonal (Puertos y Adaptadores)** centrada en el Dominio.
-
-* **Lenguaje:** Java.
-* **Gestor de dependencias:** Maven.
-* **Capa de Dominio:** Aislada al 100%, sin dependencias de frameworks. Implementa Entidades, *Value Objects* y Servicios de Dominio siguiendo DDD.
-* **Backend (Infraestructura):** Spring Boot.
-* **Frontend (Interfaces):** Interfaz gráfica de escritorio desarrollada con JavaFX.
-* **Persistencia:** JPA.
-* **Calidad:** Alta cobertura de pruebas de software, prestando especial atención a la validación del modelo de dominio.
+1. **Reglas a nivel de lista:** Restricción de capacidad máxima de tarjetas (`maxCards`) por columna.
+2. **Filtrado visual:** Herramienta en la interfaz gráfica para filtrar instantáneamente tarjetas por nombre de etiqueta o color.
+3. **Plantillas YAML:** Sistema de creación de tableros base preconfigurados cargados dinámicamente desde ficheros `.yaml`.
+4. **Compactación automática:** Tarea programada en segundo plano (`@Scheduled`) para el mantenimiento y limpieza automatizada de los tableros.
+5. **Autenticación Passwordless:** Sistema de acceso seguro mediante el envío de un código temporal (válido durante 5 minutos) por correo electrónico, protegido mediante Interceptores REST.
+6. **Gestión de Permisos:** El propietario del tablero puede invitar a otros usuarios mediante su email, otorgándoles roles granulares de lectura (`READ`) o escritura (`WRITE`), así como revocar el acceso.
+7. **Reglas de Automatización:** Motor de reglas personalizadas por el usuario ("Si ocurre evento X -> hacer Y"). Ejemplo: Si una tarjeta se mueve a la lista "Done", se marca automáticamente como completada.
 
 ---
 
-## 📂 Estructura del Proyecto (Maven Multi-module)
+## 🏗 Arquitectura y Decisiones de Diseño (DDD)
 
-El repositorio refleja la separación física y estricta de las capas arquitectónicas para garantizar la Inversión de Dependencias:
+El proyecto abandona el patrón MVC tradicional en favor de una **Arquitectura Hexagonal**. Todo el núcleo de la aplicación es agnóstico a la tecnología, lo que garantiza su mantenibilidad y testeabilidad a largo plazo.
 
-* `tableros-backend-parent/`: Proyecto orquestador principal (POM).
-* `domain/`: Núcleo puro de la aplicación. Contiene reglas de negocio y puertos (interfaces). Cero dependencias de Spring.
-* `application/`: Casos de uso que orquestan el flujo entre los puertos y el dominio.
-* `infrastructure/`: Implementación técnica (Adaptadores). Contiene los controladores REST y los repositorios de Spring Data JPA.
+* **El Dominio como centro:** Las entidades no son simples contenedores de datos (anémicos), sino objetos ricos que protegen sus invariantes.
+    * *Agregados (Aggregate Roots):* `Board` (gestiona listas, historial, permisos y automatizaciones) y `Card` (gestiona sus checklists y etiquetas).
+    * *Value Objects:* Identificadores inmutables como `BoardId`, `CardId`, `ListId` y `Email`.
+* **Aislamiento Técnico:** Los repositorios y servicios externos se comunican con el dominio exclusivamente a través de **Puertos** (Interfaces). La base de datos (H2 + JPA) reside en la capa de Infraestructura como un **Adaptador de Salida**.
+* **Protección de la Interfaz (UI):** La interfaz de escritorio (JavaFX) actúa como un **Adaptador de Entrada**. Interactúa con la lógica de negocio consumiendo Endpoints REST y comunicándose a través de un `SceneManager` inyectado, utilizando únicamente DTOs (*Data Transfer Objects*) y *Command Objects* inmutables para operaciones de escritura.
+
+### 🧪 Pruebas de Software y Calidad
+* **Tests Unitarios:** Verificación del comportamiento del dominio y casos de uso aislados mediante `Mockito` y `JUnit 5`.
+* **Tests de Integración:** Validación completa de los adaptadores REST, los repositorios JPA y los flujos de seguridad (Interceptores) usando `MockMvc` con bases de datos en memoria.
+* **Testing Arquitectónico:** Uso intensivo de **ArchUnit** para garantizar matemáticamente, mediante integración continua, que ninguna clase de infraestructura invade el dominio (Inestabilidad del Dominio = 0.00).
+
+---
+
+## 📂 Estructura del Proyecto
+
+El repositorio refleja la separación lógica de las capas arquitectónicas para garantizar la Inversión de Dependencias:
+
+* `domain/`: Núcleo puro de la aplicación. Contiene el modelo rico (DDD), los puertos (interfaces) y carece totalmente de dependencias de frameworks.
+* `application/`: Casos de uso (Servicios de Aplicación) que orquestan el flujo entre los puertos y los comandos de entrada.
+* `infrastructure/`: Implementación técnica (Adaptadores). Contiene:
+    * `persistence/`: Repositorios JPA, *Mappers* y Entidades de base de datos.
+    * `rest/`: Endpoints de la API y DTOs.
+    * `javafx/`: Controladores MVC visuales y ficheros FXML.
+    * `security/`: Interceptores y gestión de sesiones.
 
 ---
 
 ## 📚 Documentación Obligatoria y Enlaces de Interés
 
-* [**Historias de Usuario**](./docs/historias-de-usuario.md): Definición de los requisitos funcionales del sistema.
-* [**Créditos y participación**](./docs/CREDITOS.md): Detalle de la contribución de cada miembro.
+* [**Créditos y Participación (`CREDITOS.md`)**](./docs/CREDITOS.md): Detalle de la contribución de cada miembro del equipo y referencias a *Commits*/*Pull Requests*.
+* [**Historias de Usuario**](./docs/historias-de-usuario.md): Definición de los requisitos funcionales iniciales del sistema.
+* [**Documentación de Diseño**](./docs/DOCUMENTACION.md): Documento ampliado con diagramas y decisiones arquitectónicas detalladas.
