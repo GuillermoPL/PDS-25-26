@@ -4,8 +4,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 
-import es.um.pds.tableros.infraestructure.security.AuthSessionManager;
 import es.um.pds.tableros.infrastructure.javafx.SceneManager;
+import es.um.pds.tableros.infrastructure.security.AuthSessionManager;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;

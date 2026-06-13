@@ -1,4 +1,4 @@
-package es.um.pds.tableros.infraestructure.security;
+package es.um.pds.tableros.infrastructure.security;
 
 import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
