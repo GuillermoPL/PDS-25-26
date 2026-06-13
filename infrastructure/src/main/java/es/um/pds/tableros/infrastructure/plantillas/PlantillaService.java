@@ -1,17 +1,19 @@
 package es.um.pds.tableros.infrastructure.plantillas;
 
+import java.io.InputStream;
+
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Service;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import es.um.pds.tableros.domain.board.Board;
 import es.um.pds.tableros.domain.ports.input.board.BoardService;
 import es.um.pds.tableros.domain.ports.input.board.commands.AnadirListCommand;
 import es.um.pds.tableros.domain.ports.input.board.commands.CrearBoardCommand;
 import es.um.pds.tableros.domain.ports.input.card.CardService;
 import es.um.pds.tableros.domain.ports.input.card.commands.CrearCardCommand;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Service;
-
-import java.io.InputStream;
 
 @Service
 public class PlantillaService {
@@ -35,23 +37,27 @@ public class PlantillaService {
             // 2. Crear el Tablero base
             CrearBoardCommand crearTableroCmd = new CrearBoardCommand(plantilla.getTitulo(), emailUsuario);
             Board nuevoTablero = boardService.crearNuevoTablero(crearTableroCmd);
-            String boardId = nuevoTablero.getId().value(); // Ajusta según cómo obtengas el ID de tu Board
+            String boardId = nuevoTablero.getId().value(); 
             
             // 3. Crear las Listas y sus Tarjetas
             if (plantilla.getListas() != null) {
                 for (PlantillaYamlDTO.ListaYamlDTO lista : plantilla.getListas()) {
-                    AnadirListCommand anadirListaCmd = new AnadirListCommand(boardId, lista.getNombre(), null);
+                    // AÑADIDO: Pasamos emailUsuario al final
+                    AnadirListCommand anadirListaCmd = new AnadirListCommand(boardId, lista.getNombre(), null, emailUsuario);
                     String listId = boardService.anadirListaATablero(anadirListaCmd);
                     
                     if (lista.getTarjetas() != null) {
                         for (String tituloTarjeta : lista.getTarjetas()) {
+                            // AÑADIDO: Pasamos los dos nulls para las etiquetas (nombre y color), null para la checklist y emailUsuario
                             CrearCardCommand crearCardCmd = new CrearCardCommand(
                                 boardId, 
                                 listId, 
                                 tituloTarjeta, 
                                 "TASK", // Por defecto hacemos que sean tareas simples
-                                null, 
-                                null
+                                null,   // nombreEtiqueta
+                                null,   // colorEtiqueta
+                                null,   // checklistItems
+                                emailUsuario // AÑADIDO
                             );
                             cardService.crearNuevaTarjeta(crearCardCmd);
                         }

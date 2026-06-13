@@ -1,10 +1,10 @@
 package es.um.pds.tableros.domain.ports.input.board.commands;
 
-// 2. Añadir una lista al tablero
 public record AnadirListCommand(
     String boardId,
     String nombreLista,
-    Integer maxCards // Null si es ilimitada
+    Integer maxCards, // Null si es ilimitada
+    String emailSolicitante // NUEVO: Identifica quién hace la petición
 ) {
     public AnadirListCommand {
         if (boardId == null || boardId.isBlank()) {

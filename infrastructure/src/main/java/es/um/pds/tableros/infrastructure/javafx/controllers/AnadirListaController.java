@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import es.um.pds.tableros.domain.ports.input.board.BoardService;
 import es.um.pds.tableros.domain.ports.input.board.commands.AnadirListCommand;
+import es.um.pds.tableros.infrastructure.javafx.SceneManager;
 
 /**
  * Controlador del diálogo "Añadir Lista" ({@code AnadirLista.fxml}).
@@ -34,10 +35,13 @@ public class AnadirListaController {
     // ── Contexto: se asigna antes de abrir el diálogo ─────────────────────────
     private String boardId;
 
+    private final SceneManager sceneManager;
+    
     // ── Constructor ───────────────────────────────────────────────────────────
 
-    public AnadirListaController(BoardService boardService) {
+    public AnadirListaController(BoardService boardService, SceneManager sceneManager) {
         this.boardService = boardService;
+        this.sceneManager = sceneManager;
     }
 
     // ── API para el controlador padre ──────────────────────────────────────────
@@ -66,7 +70,8 @@ public class AnadirListaController {
         }
 
         try {
-            AnadirListCommand cmd = new AnadirListCommand(boardId, nombre, null); // null = sin límite
+        	String emailUsuario = sceneManager.getCurrentUserEmail(); // AÑADIDO
+            AnadirListCommand cmd = new AnadirListCommand(boardId, nombre, null, emailUsuario); // AÑADIDO el 4º parámetro
             boardService.anadirListaATablero(cmd);
             cerrarVentana();
         } catch (Exception e) {

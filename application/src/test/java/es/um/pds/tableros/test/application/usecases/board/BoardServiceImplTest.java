@@ -52,7 +52,7 @@ class BoardServiceImplTest {
         Board boardSimulado = new Board(new BoardId("b1"), "Tablero Mock", new Email("test@um.es"));
         when(boardRepository.findById(new BoardId("b1"))).thenReturn(Optional.of(boardSimulado));
 
-        AnadirListCommand cmd = new AnadirListCommand("b1", "Lista Nueva", 5);
+        AnadirListCommand cmd = new AnadirListCommand("b1", "Lista Nueva", 5, "test@um.es");
 
         // 2. Ejecutamos el servicio
         boardService.anadirListaATablero(cmd);
@@ -70,8 +70,8 @@ class BoardServiceImplTest {
         // Configuramos el mock para simular que no encuentra el tablero
         when(boardRepository.findById(any(BoardId.class))).thenReturn(Optional.empty());
 
-        AnadirListCommand cmd = new AnadirListCommand("b_inexistente", "Lista", null);
-
+        AnadirListCommand cmd = new AnadirListCommand("b_inexistente", "Lista", null, "test@um.es");
+        
         // Verificamos que el servicio atrapa esto y lanza el error correcto
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             boardService.anadirListaATablero(cmd);

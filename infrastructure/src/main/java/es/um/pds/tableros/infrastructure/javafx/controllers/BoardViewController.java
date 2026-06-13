@@ -313,7 +313,8 @@ public class BoardViewController {
 			if (db.hasString()) {
 				String cardIdVolando = db.getString();
 				try {
-					MoverCardCommand cmd = new MoverCardCommand(cardIdVolando, boardIdActual, listId);
+					String emailUsuario = sceneManager.getCurrentUserEmail();
+					MoverCardCommand cmd = new MoverCardCommand(cardIdVolando, boardIdActual, listId, emailUsuario);
 					cardService.moverTarjeta(cmd);
 					exito = true;
 					renderizarTodo();
@@ -411,8 +412,8 @@ public class BoardViewController {
                 "-fx-font-size: 10px; -fx-padding: 3 8 3 8; " +
                 "-fx-background-radius: 4; -fx-cursor: hand;");
             btnCompletar.setOnAction(e -> {
-                MoverCardCommand cmd = new MoverCardCommand(
-                    tarjeta.getId(), boardIdActual, listCompletadasId);
+            	String emailUsuario = sceneManager.getCurrentUserEmail();
+            	MoverCardCommand cmd = new MoverCardCommand(tarjeta.getId(), boardIdActual, listCompletadasId, emailUsuario);
                 cardService.moverTarjeta(cmd);
                 renderizarTodo();
                 e.consume(); // evita que el click active el drag
@@ -445,13 +446,18 @@ public class BoardViewController {
     
     @FXML
     public void handleAlternarBloqueo() {
-    	if (!this.tienePermisoEscrituraActual) {
+        if (!this.tienePermisoEscrituraActual) {
             mostrarAlertaError("Permiso denegado", "Solo los usuarios con permiso de escritura pueden realizar esta acción.");
             return;
         }
         try {
+            // AÑADIDO: Sacamos el email del usuario logueado
+            String emailUsuario = sceneManager.getCurrentUserEmail(); 
+            
+            // AÑADIDO: Le pasamos el emailUsuario como 3er parámetro al comando
             CambiarBloqueoBoardCommand cmd =
-                new CambiarBloqueoBoardCommand(boardIdActual, !this.estadoBloqueoActual);
+                new CambiarBloqueoBoardCommand(boardIdActual, !this.estadoBloqueoActual, emailUsuario); 
+                
             boardService.cambiarEstadoBloqueo(cmd);
             renderizarTodo();
         } catch (Exception e) {

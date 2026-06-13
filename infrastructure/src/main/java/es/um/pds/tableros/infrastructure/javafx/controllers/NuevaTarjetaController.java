@@ -19,6 +19,7 @@ import es.um.pds.tableros.domain.card.CardType;
 import es.um.pds.tableros.domain.card.Etiqueta;
 import es.um.pds.tableros.domain.ports.input.card.CardService;
 import es.um.pds.tableros.domain.ports.input.card.commands.CrearCardCommand;
+import es.um.pds.tableros.infrastructure.javafx.SceneManager;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -48,10 +49,12 @@ public class NuevaTarjetaController implements Initializable {
     
     private final ObservableList<String> checklistItemsTemporales = FXCollections.observableArrayList();
 
-    public NuevaTarjetaController(CardService cardService) {
+    private final SceneManager sceneManager;
+    
+    public NuevaTarjetaController(CardService cardService, SceneManager sceneManager) {
         this.cardService = cardService;
+        this.sceneManager = sceneManager;
     }
-
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         cbTipo.getItems().addAll(CardType.values());
@@ -95,12 +98,21 @@ public class NuevaTarjetaController implements Initializable {
         }
 
         try {
-            Etiqueta etiqueta = construirEtiqueta();
-
             // Solo cogemos los ítems si la tarjeta es realmente de tipo CHECKLIST
             List<String> itemsFinales = new ArrayList<>();
             if (cbTipo.getValue() == CardType.CHECKLIST) {
                 itemsFinales.addAll(checklistItemsTemporales);
+            }
+
+            String emailUsuario = sceneManager.getCurrentUserEmail();
+            
+            // Y luego de itemsFinales, pásale el email (Nota: Ya quitamos la Etiqueta de dominio, ahora pasamos los 2 strings extraídos del helper)
+            String nombreEt = null;
+            String colorEt = null;
+            Etiqueta etiquetaDominio = construirEtiqueta();
+            if (etiquetaDominio != null) {
+                nombreEt = etiquetaDominio.nombre();
+                colorEt = etiquetaDominio.color();
             }
 
             CrearCardCommand cmd = new CrearCardCommand(
@@ -108,8 +120,10 @@ public class NuevaTarjetaController implements Initializable {
                 listId,
                 titulo,
                 cbTipo.getValue().name(),
-                etiqueta,
-                itemsFinales 
+                nombreEt,        // String
+                colorEt,         // String
+                itemsFinales,
+                emailUsuario     // AÑADIDO
             );
             
             cardService.crearNuevaTarjeta(cmd);
