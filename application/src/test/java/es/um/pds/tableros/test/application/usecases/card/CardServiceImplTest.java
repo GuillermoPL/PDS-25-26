@@ -134,6 +134,5 @@ class CardServiceImplTest {
         verify(boardRepository, times(1)).save(boardSimulado);
         
         // OPCIONAL: Podemos incluso verificar que se lanzó el evento correctamente
-        verify(eventPublisher, times(1)).publishEvent(any()); 
-    }
+        verify(eventPublisher, times(1)).publishEvent(any(Object.class));    }
 }
