@@ -38,7 +38,7 @@ public class BoardEndpoint {
             @PathVariable String id,
             @RequestHeader(value = "X-User-Email", required = false) String emailUsuario) {
         try {
-            Optional<Board> boardOpt = boardService.obtenerTableroPorId(new BoardId(id));
+            Optional<Board> boardOpt = boardService.obtenerTableroPorId(id);
             if (boardOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
@@ -81,7 +81,7 @@ public class BoardEndpoint {
             @RequestHeader(value = "X-User-Email", required = false) String emailUsuario,
             @RequestBody AnadirListCommandPayload payload) {
         try {
-            Board board = boardService.obtenerTableroPorId(new BoardId(id))
+            Board board = boardService.obtenerTableroPorId(id)
                     .orElse(null);
             if (board == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             if (!tienePermisoEscritura(board, emailUsuario)) {
@@ -102,7 +102,7 @@ public class BoardEndpoint {
             @RequestHeader(value = "X-User-Email", required = false) String emailUsuario,
             @RequestParam boolean bloquear) {
         try {
-            Board board = boardService.obtenerTableroPorId(new BoardId(id))
+            Board board = boardService.obtenerTableroPorId(id)
                     .orElse(null);
             if (board == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             if (!tienePermisoEscritura(board, emailUsuario)) {

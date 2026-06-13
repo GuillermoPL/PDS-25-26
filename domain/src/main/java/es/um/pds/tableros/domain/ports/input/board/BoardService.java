@@ -12,8 +12,7 @@ public interface BoardService {
     // --- CONSULTAS ---
     
     // Para cargar el tablero actual en JavaFX
-    Optional<Board> obtenerTableroPorId(BoardId id);
-    
+	Optional<Board> obtenerTableroPorId(String boardId);    
 
     List<Board> obtenerTablerosPorUsuario(String email);
 

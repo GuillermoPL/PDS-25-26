@@ -15,8 +15,8 @@ public interface CardService {
     // Consultas básicas
     Optional<Card> obtenerTarjetaPorId(CardId id);
     
-    List<Card> obtenerTarjetasPorTablero(BoardId boardId);
-
+    List<Card> obtenerTarjetasPorTablero(String boardId);
+    
     // Operaciones de negocio basadas en comandos
     Card crearNuevaTarjeta(CrearCardCommand cmd);
 

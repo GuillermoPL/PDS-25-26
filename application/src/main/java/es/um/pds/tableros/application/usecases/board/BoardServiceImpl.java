@@ -36,8 +36,10 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public Optional<Board> obtenerTableroPorId(BoardId id) {
-        return this.boardRepository.findById(id);
+    public Optional<Board> obtenerTableroPorId(String boardId) {
+        // La capa de aplicación transforma el String crudo al Value Object
+        BoardId idDominio = new BoardId(boardId);
+        return this.boardRepository.findById(idDominio);
     }
 
     @Override
