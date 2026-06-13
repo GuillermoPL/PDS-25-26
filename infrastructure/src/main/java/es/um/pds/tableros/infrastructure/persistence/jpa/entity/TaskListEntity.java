@@ -1,6 +1,7 @@
 package es.um.pds.tableros.infrastructure.persistence.jpa.entity;
 
 import java.util.Objects;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

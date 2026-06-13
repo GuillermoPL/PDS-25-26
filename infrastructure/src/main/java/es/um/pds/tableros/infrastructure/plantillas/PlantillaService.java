@@ -4,7 +4,6 @@ import java.io.InputStream;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;

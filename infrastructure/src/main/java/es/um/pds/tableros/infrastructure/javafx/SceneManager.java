@@ -1,14 +1,15 @@
 package es.um.pds.tableros.infrastructure.javafx;
 
+import java.io.IOException;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
+
+import es.um.pds.tableros.infrastructure.javafx.controllers.BoardViewController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
-import es.um.pds.tableros.infrastructure.javafx.controllers.BoardViewController;
-
-import java.io.IOException;
 
 @Component
 public class SceneManager {

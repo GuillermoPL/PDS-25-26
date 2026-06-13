@@ -1,24 +1,23 @@
 package es.um.pds.tableros.infrastructure.persistence.jpa.entity;
-import jakarta.persistence.FetchType;
-
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.CascadeType;
-import java.util.HashMap;
-import java.util.Map;
-import jakarta.persistence.MapKeyColumn;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.EnumType;
 @Entity
 @Table(name = "BOARD")
 public class BoardEntity {

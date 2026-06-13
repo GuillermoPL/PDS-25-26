@@ -1,4 +1,3 @@
-// domain/board/Rol.java
 package es.um.pds.tableros.domain.board;
 
 public enum Rol {

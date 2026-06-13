@@ -15,7 +15,12 @@ import es.um.pds.tableros.domain.board.ListId;
 import es.um.pds.tableros.domain.board.Rol;
 import es.um.pds.tableros.domain.board.TaskList;
 import es.um.pds.tableros.domain.ports.input.board.BoardService;
-import es.um.pds.tableros.domain.ports.input.board.commands.*;
+import es.um.pds.tableros.domain.ports.input.board.commands.AnadirListCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.CambiarBloqueoBoardCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.CompartirBoardCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.CrearBoardCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.CrearReglaCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.DefinirListCompletadasCommand;
 import es.um.pds.tableros.domain.ports.output.BoardRepository;
 
 @Service

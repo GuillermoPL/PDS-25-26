@@ -1,12 +1,12 @@
 package es.um.pds.tableros.infrastructure.javafx;
 
-import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.stage.Stage;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import es.um.pds.tableros.infrastructure.TablerosApplication; // La clase con el @SpringBootApplication
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.stage.Stage;
 
 public class JavaFXApplication extends Application {
 

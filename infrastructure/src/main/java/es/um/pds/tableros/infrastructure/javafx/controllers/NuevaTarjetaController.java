@@ -1,5 +1,16 @@
 package es.um.pds.tableros.infrastructure.javafx.controllers;
 
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ResourceBundle;
+
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+import es.um.pds.tableros.domain.ports.input.card.CardService;
+import es.um.pds.tableros.domain.ports.input.card.commands.CrearCardCommand;
+import es.um.pds.tableros.infrastructure.javafx.SceneManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -12,16 +23,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-import es.um.pds.tableros.domain.ports.input.card.CardService;
-import es.um.pds.tableros.domain.ports.input.card.commands.CrearCardCommand;
-import es.um.pds.tableros.infrastructure.javafx.SceneManager;
-
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
 
 @Component
 @Scope("prototype") 

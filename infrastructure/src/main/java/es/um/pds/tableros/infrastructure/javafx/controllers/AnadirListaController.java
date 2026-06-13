@@ -1,14 +1,14 @@
 package es.um.pds.tableros.infrastructure.javafx.controllers;
 
-import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.TextField;
-import javafx.stage.Stage;
 import org.springframework.stereotype.Component;
 
 import es.um.pds.tableros.domain.ports.input.board.BoardService;
 import es.um.pds.tableros.domain.ports.input.board.commands.AnadirListCommand;
 import es.um.pds.tableros.infrastructure.javafx.SceneManager;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 
 /**
  * Controlador del diálogo "Añadir Lista" ({@code AnadirLista.fxml}).

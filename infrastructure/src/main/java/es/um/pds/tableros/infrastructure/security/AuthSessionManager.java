@@ -1,10 +1,11 @@
 package es.um.pds.tableros.infrastructure.security;
 
-import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.stereotype.Component;
 
 @Component
 public class AuthSessionManager {

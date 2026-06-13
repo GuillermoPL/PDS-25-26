@@ -1,15 +1,21 @@
 package es.um.pds.tableros.infrastructure.javafx.controllers;
 
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import java.util.List;
+
+import org.springframework.stereotype.Component;
+
 import es.um.pds.tableros.domain.ports.input.board.BoardService;
 import es.um.pds.tableros.domain.ports.input.board.commands.CrearBoardCommand;
-import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
-import es.um.pds.tableros.infrastructure.mappers.BoardMapper;
 import es.um.pds.tableros.infrastructure.javafx.SceneManager; // Importamos el manager
-import org.springframework.stereotype.Component;
+import es.um.pds.tableros.infrastructure.mappers.BoardMapper;
 import es.um.pds.tableros.infrastructure.plantillas.PlantillaService;
-import java.util.List;
+import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 
 @Component
 public class DashboardController {

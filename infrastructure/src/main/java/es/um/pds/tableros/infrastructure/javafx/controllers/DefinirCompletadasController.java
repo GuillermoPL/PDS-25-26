@@ -1,11 +1,5 @@
 package es.um.pds.tableros.infrastructure.javafx.controllers;
 
-import javafx.fxml.FXML;
-
-import javafx.scene.control.Alert;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListCell;
-import javafx.stage.Stage;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +7,11 @@ import es.um.pds.tableros.domain.ports.input.board.BoardService;
 import es.um.pds.tableros.domain.ports.input.board.commands.DefinirListCompletadasCommand;
 import es.um.pds.tableros.infrastructure.mappers.BoardMapper;
 import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListCell;
+import javafx.stage.Stage;
 
 
 @Component

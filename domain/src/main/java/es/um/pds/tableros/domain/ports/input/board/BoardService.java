@@ -4,8 +4,12 @@ import java.util.List;
 import java.util.Optional;
 
 import es.um.pds.tableros.domain.board.Board;
-import es.um.pds.tableros.domain.board.BoardId;
-import es.um.pds.tableros.domain.ports.input.board.commands.*;
+import es.um.pds.tableros.domain.ports.input.board.commands.AnadirListCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.CambiarBloqueoBoardCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.CompartirBoardCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.CrearBoardCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.CrearReglaCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.DefinirListCompletadasCommand;
 
 public interface BoardService {
 

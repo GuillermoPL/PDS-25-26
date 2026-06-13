@@ -1,6 +1,7 @@
 package es.um.pds.tableros.infrastructure.mappers;
 
 import org.springframework.stereotype.Component;
+
 import es.um.pds.tableros.domain.board.ListId;
 import es.um.pds.tableros.domain.board.TaskList;
 import es.um.pds.tableros.infrastructure.persistence.jpa.entity.BoardEntity;
