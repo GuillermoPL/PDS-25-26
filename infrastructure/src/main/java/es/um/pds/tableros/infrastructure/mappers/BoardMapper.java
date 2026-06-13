@@ -55,6 +55,17 @@ public class BoardMapper {
                 ));
             dto.setPermisos(permisosDTO);
         }
+        if (board.getReglas() != null) {
+            List<BoardDTO.ReglaDTO> reglasDTO = board.getReglas().stream()
+                .map(r -> new BoardDTO.ReglaDTO(
+                    r.id(),
+                    r.triggerType().name(),
+                    r.triggerPayload(),
+                    r.actionType().name()
+                ))
+                .toList();
+            dto.setReglas(reglasDTO);
+        }
         return dto;
     }
 

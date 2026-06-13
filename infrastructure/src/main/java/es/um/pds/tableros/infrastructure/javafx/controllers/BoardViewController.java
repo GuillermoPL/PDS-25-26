@@ -1,43 +1,47 @@
 package es.um.pds.tableros.infrastructure.javafx.controllers;
 
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.scene.control.*;
-import javafx.scene.input.*;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
-import javafx.geometry.Insets;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.Window;
-
-import es.um.pds.tableros.domain.board.BoardId;
-import es.um.pds.tableros.domain.ports.input.board.BoardService;
-import es.um.pds.tableros.domain.ports.input.board.commands.CambiarBloqueoBoardCommand;
-import es.um.pds.tableros.domain.ports.input.card.CardService;
-import es.um.pds.tableros.domain.ports.input.card.commands.MoverCardCommand;
-import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
-import es.um.pds.tableros.infrastructure.rest.dto.CardDTO;
-import es.um.pds.tableros.infrastructure.mappers.BoardMapper;
-import es.um.pds.tableros.infrastructure.mappers.CardMapper;
-import es.um.pds.tableros.infrastructure.javafx.SceneManager;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
-import es.um.pds.tableros.domain.board.Rol;
+import es.um.pds.tableros.domain.ports.input.board.BoardService;
+import es.um.pds.tableros.domain.ports.input.board.commands.CambiarBloqueoBoardCommand;
 import es.um.pds.tableros.domain.ports.input.board.commands.CompartirBoardCommand;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Separator;
-import javafx.scene.control.ListView;
+import es.um.pds.tableros.domain.ports.input.board.commands.CrearReglaCommand;
+import es.um.pds.tableros.domain.ports.input.card.CardService;
+import es.um.pds.tableros.domain.ports.input.card.commands.MoverCardCommand;
+import es.um.pds.tableros.infrastructure.javafx.SceneManager;
+import es.um.pds.tableros.infrastructure.mappers.BoardMapper;
+import es.um.pds.tableros.infrastructure.mappers.CardMapper;
+import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
+import es.um.pds.tableros.infrastructure.rest.dto.CardDTO;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TextField;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 @Component
 public class BoardViewController {
 
@@ -91,15 +95,15 @@ public class BoardViewController {
     private void renderizarTodo() {
         hboxColumnas.getChildren().clear();
 
-        BoardDTO tablero = boardService.obtenerTableroPorId(new BoardId(boardIdActual))
+        BoardDTO tablero = boardService.obtenerTableroPorId(boardIdActual)
                 .map(boardMapper::toDTO)
                 .orElseThrow(() -> new IllegalArgumentException("Tablero no encontrado"));
         String emailUsuario = sceneManager.getCurrentUserEmail();
-        es.um.pds.tableros.domain.board.Board tableroDominio = boardService.obtenerTableroPorId(new BoardId(boardIdActual)).get();
-        Rol rol = tableroDominio.obtenerRol(new es.um.pds.tableros.domain.board.Email(emailUsuario));
-        this.tienePermisoEscrituraActual = Rol.WRITE.equals(rol);
+        boolean esDueno = tablero.getEmail().equals(emailUsuario);
+        String rolInvitado = (tablero.getPermisos() != null) ? tablero.getPermisos().get(emailUsuario) : null;
+        this.tienePermisoEscrituraActual = esDueno || "WRITE".equals(rolInvitado);
         List<CardDTO> todasLasTarjetas = cardService
-                .obtenerTarjetasPorTablero(new BoardId(boardIdActual))
+                .obtenerTarjetasPorTablero(boardIdActual)
                 .stream().map(cardMapper::toDTO).toList();
 
         lblTituloTablero.setText(tablero.getTitulo());
@@ -587,7 +591,8 @@ public class BoardViewController {
                 txtEmailInvitado.clear();
                 
                 // ¡Ya no dará error!
-                actualizarListaPermisos(listaPermisos); 
+                BoardDTO tableroDTO = obtenerTableroActualizado();
+                actualizarListaPermisos(listaPermisos, tableroDTO);
                 
             } catch (IllegalStateException ex) {
                 lblResultado.setStyle("-fx-text-fill: #e74c3c;");
@@ -606,7 +611,7 @@ public class BoardViewController {
         lblAccesos.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
 
         // Llenamos la lista inicial
-        actualizarListaPermisos(listaPermisos);
+        actualizarListaPermisos(listaPermisos, obtenerTableroActualizado());
 
         Button btnRevocar = new Button("Revocar acceso seleccionado");
         btnRevocar.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white;");
@@ -620,7 +625,7 @@ public class BoardViewController {
                 boardService.revocarAcceso(boardIdActual, emailDueno, emailAEliminar);
                 lblResultado.setStyle("-fx-text-fill: #27ae60;");
                 lblResultado.setText("✓ Acceso revocado para " + emailAEliminar);
-                actualizarListaPermisos(listaPermisos);
+                actualizarListaPermisos(listaPermisos, obtenerTableroActualizado());
             } catch (IllegalStateException ex) {
                 lblResultado.setStyle("-fx-text-fill: #e74c3c;");
                 lblResultado.setText("No se puede revocar: " + ex.getMessage());
@@ -662,11 +667,12 @@ public class BoardViewController {
         Label lblSi = new Label("Si la tarjeta se mueve a:");
         
         ComboBox<String> cbListas = new ComboBox<>();
-        // Rellenar con las listas del tablero
-        boardService.obtenerTableroPorId(new BoardId(boardIdActual)).ifPresent(b -> {
-            cbListas.getItems().addAll(b.getTasksLists().stream().map(l -> l.getNombre()).toList());
-        });
-
+        // Rellenar puramente desde el DTO
+        BoardDTO tableroDTO = obtenerTableroActualizado();
+        if (tableroDTO.getListas() != null) {
+            cbListas.getItems().addAll(tableroDTO.getListas().stream()
+                    .map(BoardDTO.ListaDTO::getNombre).toList());
+        }
         filaCondicion.getChildren().addAll(lblSi, cbListas);
 
         HBox filaAccion = new HBox(8);
@@ -689,7 +695,7 @@ public class BoardViewController {
 
         ListView<String> listaReglas = new ListView<>();
         listaReglas.setPrefHeight(150);
-        actualizarListaReglas(listaReglas);
+        actualizarListaReglas(listaReglas, tableroDTO);
 
         // Acción del botón
         btnCrear.setOnAction(e -> {
@@ -703,18 +709,21 @@ public class BoardViewController {
             }
 
             try {
-                // Buscamos el ID real de la lista seleccionada
-                es.um.pds.tableros.domain.board.Board b = boardService.obtenerTableroPorId(new BoardId(boardIdActual)).get();
-                String listId = b.getTasksLists().stream()
+                // Buscamos el ID real consultando el DTO, sin invocar a dominio
+                BoardDTO dtoActual = obtenerTableroActualizado();
+                String listId = dtoActual.getListas().stream()
                         .filter(l -> l.getNombre().equals(nombreLista))
-                        .findFirst().get().getId().value();
+                        .map(BoardDTO.ListaDTO::getId)
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("No se encontró la lista"));
 
-                boardService.anadirReglaAutomatizacion(new es.um.pds.tableros.domain.ports.input.board.commands.CrearReglaCommand(
+                // Importa CrearReglaCommand arriba en tu archivo para no poner la ruta entera aquí
+                boardService.anadirReglaAutomatizacion(new CrearReglaCommand(
                         boardIdActual, "TARJETA_MOVIDA_A_LISTA", listId, accionStr));
                 
                 lblResultado.setStyle("-fx-text-fill: #27ae60;");
                 lblResultado.setText("✓ Regla creada");
-                actualizarListaReglas(listaReglas);
+                actualizarListaReglas(listaReglas, obtenerTableroActualizado());
 
             } catch (Exception ex) {
                 lblResultado.setStyle("-fx-text-fill: #e74c3c;");
@@ -732,26 +741,37 @@ public class BoardViewController {
         dialog.showAndWait();
     }
 
-    private void actualizarListaReglas(ListView<String> lista) {
-        boardService.obtenerTableroPorId(new BoardId(boardIdActual)).ifPresent(board -> {
+    private void actualizarListaReglas(ListView<String> lista, BoardDTO tableroDTO) {
+        if (tableroDTO.getReglas() != null) {
             lista.getItems().setAll(
-                board.getReglas().stream()
-                    .map(r -> "Si se mueve a '" + board.obtenerNombreLista(new es.um.pds.tableros.domain.board.ListId(r.triggerPayload())) + 
-                              "' ➔ " + r.actionType().name())
+                tableroDTO.getReglas().stream()
+                    .map(r -> {
+                        // Buscamos el nombre de la lista dentro de las listas del DTO
+                        String nombreLista = tableroDTO.getListas().stream()
+                                .filter(l -> l.getId().equals(r.getTriggerPayload()))
+                                .map(BoardDTO.ListaDTO::getNombre)
+                                .findFirst()
+                                .orElse("Lista desconocida");
+                        
+                        return "Si se mueve a '" + nombreLista + "' ➔ " + r.getActionType();
+                    })
                     .toList()
             );
-        });
+        } else {
+            lista.getItems().clear();
+        }
     }
     // ── Helper: rellena la ListView con los permisos actuales ─────────────────
-    private void actualizarListaPermisos(ListView<String> lista) {
-        boardService.obtenerTableroPorId(new BoardId(boardIdActual))
-            .ifPresent(board -> {
-                lista.getItems().setAll(
-                    board.getPermisos().entrySet().stream()
-                        .map(e -> e.getKey().value() + " — " + e.getValue().name())
-                        .toList()
-                );
-            });
+    private void actualizarListaPermisos(ListView<String> lista, BoardDTO tableroDTO) {
+        if (tableroDTO.getPermisos() != null) {
+            lista.getItems().setAll(
+                tableroDTO.getPermisos().entrySet().stream()
+                    .map(e -> e.getKey() + " — " + e.getValue())
+                    .toList()
+            );
+        } else {
+            lista.getItems().clear();
+        }
     }
     
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -793,5 +813,11 @@ public class BoardViewController {
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
         alert.showAndWait();
+    }
+    
+    private BoardDTO obtenerTableroActualizado() {
+        return boardService.obtenerTableroPorId(boardIdActual)
+                .map(boardMapper::toDTO)
+                .orElseThrow(() -> new IllegalArgumentException("El tablero ya no existe"));
     }
 }

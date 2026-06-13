@@ -38,7 +38,7 @@ public class DefinirCompletadasController {
     }
 
     private void cargarListas() {
-        BoardDTO tablero = boardService.obtenerTableroPorId(new BoardId(boardId))
+        BoardDTO tablero = boardService.obtenerTableroPorId(boardId)
                 .map(boardMapper::toDTO)
                 .orElse(null);
 

@@ -107,7 +107,7 @@ public class CardEndpoint {
     // --- HELPER PRIVADO ---
     private boolean tienePermisoEscritura(String boardId, String emailUsuario) {
         if (emailUsuario == null) return false;
-        return boardService.obtenerTableroPorId(new BoardId(boardId))
+        return boardService.obtenerTableroPorId(boardId)
             .map(board -> Rol.WRITE.equals(board.obtenerRol(new Email(emailUsuario))))
             .orElse(false);
     }

@@ -56,7 +56,7 @@ public class HistorialController {
     private void cargarHistorial() {
         listHistorial.getItems().clear();
 
-        Board tablero = boardService.obtenerTableroPorId(new BoardId(boardId))
+        Board tablero = boardService.obtenerTableroPorId(boardId)
                 .orElse(null);
 
         if (tablero == null) {

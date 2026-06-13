@@ -50,10 +50,11 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    public List<Card> obtenerTarjetasPorTablero(BoardId boardId) {
-        return this.cardRepository.findByBoardId(boardId);
+    public List<Card> obtenerTarjetasPorTablero(String boardId) {
+        // El caso de uso protege al dominio transformando el String al VO
+        BoardId idDominio = new BoardId(boardId);
+        return this.cardRepository.findByBoardId(idDominio);
     }
-
     @Override
     public Card crearNuevaTarjeta(CrearCardCommand cmd) {
         log.info("Creando nueva tarjeta con título '{}' en la lista {}", cmd.titulo(), cmd.listId());
