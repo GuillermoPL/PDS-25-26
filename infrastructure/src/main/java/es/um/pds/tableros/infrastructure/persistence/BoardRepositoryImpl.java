@@ -2,8 +2,9 @@ package es.um.pds.tableros.infrastructure.persistence;
 
 import java.util.List;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Repository;
+
 import es.um.pds.tableros.domain.board.Board;
 import es.um.pds.tableros.domain.board.BoardId;
 import es.um.pds.tableros.domain.ports.output.BoardRepository;
@@ -12,11 +13,13 @@ import es.um.pds.tableros.infrastructure.mappers.BoardMapper;
 @Repository
 public class BoardRepositoryImpl implements BoardRepository {
 
-    @Autowired
-    private SpringDataBoardRepository springDataBoardRepository;
+    private final SpringDataBoardRepository springDataBoardRepository;
+    private final BoardMapper boardMapper;
 
-    @Autowired
-    private BoardMapper boardMapper;
+    public BoardRepositoryImpl(SpringDataBoardRepository springDataBoardRepository, BoardMapper boardMapper) {
+        this.springDataBoardRepository = springDataBoardRepository;
+        this.boardMapper = boardMapper;
+    }
 
     @Override
     public void save(Board board) {

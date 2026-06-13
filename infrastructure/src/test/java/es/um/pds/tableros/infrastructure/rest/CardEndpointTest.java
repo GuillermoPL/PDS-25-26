@@ -1,12 +1,12 @@
 package es.um.pds.tableros.infrastructure.rest;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,18 +36,19 @@ import es.um.pds.tableros.infrastructure.rest.dto.CardDTO;
 @Transactional
 class CardEndpointTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    private final MockMvc mockMvc;
+    private final ObjectMapper objectMapper;
+    private final BoardRepository boardRepository;
+    private final CardRepository cardRepository;
 
+    // Inyección por constructor para todas las dependencias
     @Autowired
-    private ObjectMapper objectMapper;
-
-    // Inyectamos los repositorios reales para preparar el escenario de pruebas
-    @Autowired
-    private BoardRepository boardRepository;
-
-    @Autowired
-    private CardRepository cardRepository;
+    public CardEndpointTest(MockMvc mockMvc, ObjectMapper objectMapper, BoardRepository boardRepository, CardRepository cardRepository) {
+        this.mockMvc = mockMvc;
+        this.objectMapper = objectMapper;
+        this.boardRepository = boardRepository;
+        this.cardRepository = cardRepository;
+    }
 
     private static final String BASE = "/api/v1/tarjetas";
     

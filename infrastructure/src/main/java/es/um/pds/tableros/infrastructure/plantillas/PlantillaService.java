@@ -3,6 +3,7 @@ package es.um.pds.tableros.infrastructure.plantillas;
 import java.io.InputStream;
 
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,7 +16,7 @@ import es.um.pds.tableros.domain.ports.input.board.commands.CrearBoardCommand;
 import es.um.pds.tableros.domain.ports.input.card.CardService;
 import es.um.pds.tableros.domain.ports.input.card.commands.CrearCardCommand;
 
-@Service
+@Component
 public class PlantillaService {
 
     private final BoardService boardService;

@@ -1,10 +1,10 @@
 package es.um.pds.tableros.infrastructure.rest;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,11 +24,15 @@ import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
 @Transactional
 class BoardEndpointTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    private final MockMvc mockMvc;
+    private final ObjectMapper objectMapper;
 
+    // Inyección por constructor (Válido para JUnit 5 + Spring Boot)
     @Autowired
-    private ObjectMapper objectMapper;
+    public BoardEndpointTest(MockMvc mockMvc, ObjectMapper objectMapper) {
+        this.mockMvc = mockMvc;
+        this.objectMapper = objectMapper;
+    }
 
     private static final String BASE = "/api/v1/tableros";
 

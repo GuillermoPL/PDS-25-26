@@ -12,6 +12,7 @@ import es.um.pds.tableros.domain.ports.input.board.BoardService;
 import es.um.pds.tableros.domain.ports.input.board.commands.*;
 import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
 import es.um.pds.tableros.infrastructure.mappers.BoardMapper; 
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/tableros")
@@ -64,7 +65,7 @@ public class BoardEndpoint {
 
     // 2. Crear un nuevo tablero
     @PostMapping
-    public ResponseEntity<BoardDTO> createTablero(@RequestBody BoardDTO dto) {
+    public ResponseEntity<BoardDTO> createTablero(@Valid @RequestBody BoardDTO dto) {
         log.info("Petición para crear tablero '{}'", dto.getTitulo());
         
         if (dto.getId() != null) {
@@ -86,7 +87,7 @@ public class BoardEndpoint {
     public ResponseEntity<Void> anadirLista(
             @PathVariable String id,
             @RequestHeader(value = "X-User-Email", required = false) String emailUsuario,
-            @RequestBody AnadirListCommandPayload payload) {
+            @Valid @RequestBody AnadirListCommandPayload payload) {
         try {
             // Pasamos el email del usuario al comando. El servicio decidirá si lanza IllegalStateException.
             AnadirListCommand cmd = new AnadirListCommand(id, payload.nombreLista(), payload.maxCards(), emailUsuario);
@@ -124,7 +125,7 @@ public class BoardEndpoint {
     public ResponseEntity<Void> compartirTablero(
             @PathVariable String id,
             @RequestHeader("X-User-Email") String emailSolicitante,
-            @RequestBody PermisosPayload payload) {
+            @Valid @RequestBody PermisosPayload payload) {
         try {
             // El comando ya estaba preparado con emailSolicitante
             CompartirBoardCommand cmd = new CompartirBoardCommand(
