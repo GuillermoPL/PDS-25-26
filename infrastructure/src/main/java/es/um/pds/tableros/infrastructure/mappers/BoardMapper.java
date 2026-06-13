@@ -1,26 +1,27 @@
 package es.um.pds.tableros.infrastructure.mappers;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Component;
 
 import es.um.pds.tableros.domain.board.Board;
 import es.um.pds.tableros.domain.board.BoardId;
 import es.um.pds.tableros.domain.board.Email;
-import es.um.pds.tableros.domain.board.TaskList;
-import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
-import java.util.List;
-import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
 import es.um.pds.tableros.domain.board.ListId;
+import es.um.pds.tableros.domain.board.Rol;
 import es.um.pds.tableros.infrastructure.persistence.jpa.entity.AutomationRuleEmbeddable;
 import es.um.pds.tableros.infrastructure.persistence.jpa.entity.BoardEntity;
 import es.um.pds.tableros.infrastructure.persistence.jpa.entity.TaskListEntity;
-import es.um.pds.tableros.domain.board.Rol;
-import java.util.Map;
+import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
 @Component
 public class BoardMapper {
-	@Autowired
-	private TaskListMapper taskListMapper;
+    private final TaskListMapper taskListMapper;
+
+    public BoardMapper(TaskListMapper taskListMapper) {
+        this.taskListMapper = taskListMapper;
+    }
 	
     /**
      * Transforma del Modelo del Dominio al DTO (Para enviar hacia fuera en la API REST)

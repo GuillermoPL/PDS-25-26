@@ -2,8 +2,9 @@ package es.um.pds.tableros.infrastructure.persistence;
 
 import java.util.List;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Repository;
+
 import es.um.pds.tableros.domain.board.BoardId;
 import es.um.pds.tableros.domain.card.Card;
 import es.um.pds.tableros.domain.card.CardId;
@@ -13,11 +14,13 @@ import es.um.pds.tableros.infrastructure.mappers.CardMapper;
 @Repository
 public class CardRepositoryImpl implements CardRepository {
 
-    @Autowired
-    private SpringDataCardRepository springDataCardRepository;
+    private final SpringDataCardRepository springDataCardRepository;
+    private final CardMapper cardMapper;
 
-    @Autowired
-    private CardMapper cardMapper;
+    public CardRepositoryImpl(SpringDataCardRepository springDataCardRepository, CardMapper cardMapper) {
+        this.springDataCardRepository = springDataCardRepository;
+        this.cardMapper = cardMapper;
+    }
 
     @Override
     public void save(Card card) {

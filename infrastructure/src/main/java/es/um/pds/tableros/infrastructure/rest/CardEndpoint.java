@@ -11,6 +11,7 @@ import es.um.pds.tableros.domain.ports.input.card.commands.CrearCardCommand;
 import es.um.pds.tableros.domain.ports.input.card.commands.MoverCardCommand;
 import es.um.pds.tableros.infrastructure.rest.dto.CardDTO;
 import es.um.pds.tableros.infrastructure.mappers.CardMapper;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/tarjetas")
@@ -38,7 +39,7 @@ public class CardEndpoint {
     @PostMapping
     public ResponseEntity<CardDTO> createTarjeta(
             @RequestHeader(value = "X-User-Email", required = false) String emailUsuario, 
-            @RequestBody CardDTO dto) {
+            @Valid @RequestBody CardDTO dto) {
             
         log.info("Petición para crear tarjeta '{}' en la lista {}", dto.getTitulo(), dto.getListIdActual());
         
@@ -78,7 +79,7 @@ public class CardEndpoint {
     public ResponseEntity<Void> moverTarjeta(
             @PathVariable String id, 
             @RequestHeader(value = "X-User-Email", required = false) String emailUsuario,
-            @RequestBody MoverTarjetaPayload payload) {
+            @Valid @RequestBody MoverTarjetaPayload payload) {
             
         log.info("Petición para mover la tarjeta {} a la lista {}", id, payload.targetListId());
 
