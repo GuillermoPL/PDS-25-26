@@ -15,40 +15,28 @@ import es.um.pds.tableros.domain.board.ListId;
 import es.um.pds.tableros.domain.board.Rol;
 import es.um.pds.tableros.domain.board.TaskList;
 import es.um.pds.tableros.domain.ports.input.board.BoardService;
-import es.um.pds.tableros.domain.ports.input.board.commands.AnadirListCommand;
-import es.um.pds.tableros.domain.ports.input.board.commands.CambiarBloqueoBoardCommand;
-import es.um.pds.tableros.domain.ports.input.board.commands.CompartirBoardCommand;
-import es.um.pds.tableros.domain.ports.input.board.commands.CrearBoardCommand;
-import es.um.pds.tableros.domain.ports.input.board.commands.CrearReglaCommand;
-import es.um.pds.tableros.domain.ports.input.board.commands.DefinirListCompletadasCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.*;
 import es.um.pds.tableros.domain.ports.output.BoardRepository;
 
 @Service
 public class BoardServiceImpl implements BoardService {
 
     private static final Logger log = LoggerFactory.getLogger(BoardServiceImpl.class);
-
     private final BoardRepository boardRepository;
 
-    // Inyección por constructor del puerto de salida
     public BoardServiceImpl(BoardRepository boardRepository) {
         this.boardRepository = boardRepository;
     }
 
     @Override
-    public Optional<Board> obtenerTableroPorId(String boardId) {
-        // La capa de aplicación transforma el String crudo al Value Object
-        BoardId idDominio = new BoardId(boardId);
-        return this.boardRepository.findById(idDominio);
+    public Optional<Board> obtenerTableroPorId(String id) {
+        // La capa de aplicación protege al dominio transformando el String crudo
+        return this.boardRepository.findById(new BoardId(id));
     }
 
     @Override
     public List<Board> obtenerTablerosPorUsuario(String emailRaw) {
-        // 1. La capa de aplicación transforma el String crudo al Value Object del Dominio
-        // Si el formato es incorrecto, el dominio lanzará la IllegalArgumentException AQUÍ
         Email emailValidado = new Email(emailRaw);
-
-        // 2. Si pasa la validación, procedemos a consultar el puerto de salida
         return this.boardRepository.findByEmail(emailValidado.value());
     }
 
@@ -56,15 +44,10 @@ public class BoardServiceImpl implements BoardService {
     public Board crearNuevoTablero(CrearBoardCommand cmd) {
         log.info("Creando nuevo tablero '{}' para el usuario {}", cmd.titulo(), cmd.emailCreator());
 
-        // Generamos un identificador único de dominio para el nuevo tablero
         BoardId nuevoBoardId = BoardId.generate();
-        
-        // Instanciamos el agregado pasándole los parámetros del comando
         Board nuevoTablero = new Board(nuevoBoardId, cmd.titulo(), new Email(cmd.emailCreator()));
 
         nuevoTablero.registrarEvento("Tablero creado por " + cmd.emailCreator());
-        
-        // Persistimos el nuevo tablero a través del puerto de salida
         this.boardRepository.save(nuevoTablero);
 
         return nuevoTablero;
@@ -72,60 +55,19 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     public String anadirListaATablero(AnadirListCommand cmd) {
-
-        log.info("Añadiendo lista '{}' al tablero {}",
-                 cmd.nombreLista(),
-                 cmd.boardId());
-
-        Board board = this.boardRepository
-                .findById(new BoardId(cmd.boardId()))
-                .orElseThrow(() ->
-                    new IllegalArgumentException(
-                        "El tablero especificado no existe"
-                    )
-                );
-
-        TaskList nuevaLista =
-                board.addList(
-                        cmd.nombreLista(),
-                        cmd.maxCards()
-                );
-
-        board.registrarEvento(
-                "Lista añadida: " + cmd.nombreLista()
-        );
-
-        this.boardRepository.save(board);
-
-        return nuevaLista.getId().value();
-    }
-
-    @Override
-    public void definirListaCompletadas(DefinirListCompletadasCommand cmd) {
-        log.info("Configurando la lista {} como la de tareas completadas del tablero {}", cmd.listId(), cmd.boardId());
+        log.info("Añadiendo lista '{}' al tablero {}", cmd.nombreLista(), cmd.boardId());
 
         Board board = this.boardRepository.findById(new BoardId(cmd.boardId()))
                 .orElseThrow(() -> new IllegalArgumentException("El tablero especificado no existe"));
 
-        ListId listId = new ListId(cmd.listId());
+        // Verificación de seguridad delegada al servicio
+        verificarPermisoEscritura(board, cmd.emailSolicitante());
 
-        // Validamos que la lista pertenezca realmente al tablero antes de marcarla
-        boolean listaExiste = board.getTasksLists().stream()
-                .anyMatch(lista -> lista.getId().equals(listId));
+        TaskList nuevaLista = board.addList(cmd.nombreLista(), cmd.maxCards());
+        board.registrarEvento("Lista añadida: " + cmd.nombreLista());
 
-        if (!listaExiste) {
-            throw new IllegalArgumentException("La lista especificada no pertenece a este tablero");
-        }
-
-        // Modificamos el estado del agregado
-        board.defineListCompletadas(listId);
-
-        board.registrarEvento(
-        	    String.format("Lista '%s' configurada como completadas", board.obtenerNombreLista(listId))
-        	);
-        
-        // Sincronizamos con el repositorio
         this.boardRepository.save(board);
+        return nuevaLista.getId().value();
     }
 
     @Override
@@ -135,7 +77,9 @@ public class BoardServiceImpl implements BoardService {
         Board board = this.boardRepository.findById(new BoardId(cmd.boardId()))
                 .orElseThrow(() -> new IllegalArgumentException("El tablero especificado no existe"));
 
-        // Modificamos las invariantes según venga la bandera del comando
+        // Verificación de seguridad delegada al servicio
+        verificarPermisoEscritura(board, cmd.emailSolicitante());
+
         if (cmd.bloquear()) {
             board.lock();
             board.registrarEvento("Tablero bloqueado temporalmente");
@@ -144,10 +88,9 @@ public class BoardServiceImpl implements BoardService {
             board.registrarEvento("Tablero desbloqueado");
         }
 
-        // Persistimos los cambios
         this.boardRepository.save(board);
     }
-    
+
     @Override
     public void compartirTablero(CompartirBoardCommand cmd) {
         log.info("Compartiendo tablero {} con {}", cmd.boardId(), cmd.emailInvitado());
@@ -155,7 +98,6 @@ public class BoardServiceImpl implements BoardService {
         Board board = boardRepository.findById(new BoardId(cmd.boardId()))
                 .orElseThrow(() -> new IllegalArgumentException("El tablero no existe"));
 
-        // Solo el dueño puede compartir
         if (!board.getEmail().equals(new Email(cmd.emailSolicitante()))) {
             throw new IllegalStateException("Solo el dueño puede compartir el tablero");
         }
@@ -183,7 +125,29 @@ public class BoardServiceImpl implements BoardService {
 
         boardRepository.save(board);
     }
-    
+
+    @Override
+    public void definirListaCompletadas(DefinirListCompletadasCommand cmd) {
+        log.info("Configurando la lista {} como la de tareas completadas del tablero {}", cmd.listId(), cmd.boardId());
+
+        Board board = this.boardRepository.findById(new BoardId(cmd.boardId()))
+                .orElseThrow(() -> new IllegalArgumentException("El tablero especificado no existe"));
+
+        ListId listId = new ListId(cmd.listId());
+
+        boolean listaExiste = board.getTasksLists().stream()
+                .anyMatch(lista -> lista.getId().equals(listId));
+
+        if (!listaExiste) {
+            throw new IllegalArgumentException("La lista especificada no pertenece a este tablero");
+        }
+
+        board.defineListCompletadas(listId);
+        board.registrarEvento(String.format("Lista '%s' configurada como completadas", board.obtenerNombreLista(listId)));
+        
+        this.boardRepository.save(board);
+    }
+
     @Override
     public void anadirReglaAutomatizacion(CrearReglaCommand cmd) {
         log.info("Añadiendo automatización al tablero {}", cmd.boardId());
@@ -202,5 +166,16 @@ public class BoardServiceImpl implements BoardService {
         board.registrarEvento("Nueva regla de automatización creada");
 
         boardRepository.save(board);
+    }
+
+    // --- HELPER PRIVADO DE SEGURIDAD ---
+    private void verificarPermisoEscritura(Board board, String emailSolicitante) {
+        if (emailSolicitante == null || emailSolicitante.isBlank()) {
+            throw new IllegalStateException("Usuario no autenticado");
+        }
+        Rol rol = board.obtenerRol(new Email(emailSolicitante));
+        if (!Rol.WRITE.equals(rol)) {
+            throw new IllegalStateException("El usuario no tiene permisos de escritura en este tablero");
+        }
     }
 }

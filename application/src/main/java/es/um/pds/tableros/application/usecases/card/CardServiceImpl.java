@@ -11,7 +11,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import es.um.pds.tableros.application.usecases.events.CardMovidaEvent;
 import es.um.pds.tableros.domain.board.Board;
 import es.um.pds.tableros.domain.board.BoardId;
+import es.um.pds.tableros.domain.board.Email;
 import es.um.pds.tableros.domain.board.ListId;
+import es.um.pds.tableros.domain.board.Rol;
 import es.um.pds.tableros.domain.card.Card;
 import es.um.pds.tableros.domain.card.CardId;
 import es.um.pds.tableros.domain.card.CardType;
@@ -45,8 +47,8 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    public Optional<Card> obtenerTarjetaPorId(CardId id) {
-        return this.cardRepository.findById(id);
+    public Optional<Card> obtenerTarjetaPorId(String id) {
+        return this.cardRepository.findById(new CardId(id)); // Protegemos convirtiendo a CardId aquí
     }
 
     @Override
@@ -65,6 +67,9 @@ public class CardServiceImpl implements CardService {
         Board board = boardRepository.findById(bId)
              .orElseThrow(() -> new IllegalArgumentException("El tablero especificado no existe"));
         
+        // --- NUEVO: Verificamos permisos ---
+        verificarPermisoEscritura(board, cmd.emailSolicitante());
+
         board.verificaAnadirCard(lId);
 
         CardId nuevoCardId = CardId.generate();
@@ -77,8 +82,9 @@ public class CardServiceImpl implements CardService {
             }
         }
 
-        if (cmd.etiqueta() != null) {
-            nuevaTarjeta.anadirEtiqueta(cmd.etiqueta());
+        // --- NUEVO: Creamos el objeto de dominio Etiqueta DENTRO del servicio ---
+        if (cmd.nombreEtiqueta() != null && cmd.colorEtiqueta() != null) {
+            nuevaTarjeta.anadirEtiqueta(new Etiqueta(cmd.nombreEtiqueta(), cmd.colorEtiqueta()));
         }
         
         this.cardRepository.save(nuevaTarjeta);
@@ -100,6 +106,9 @@ public class CardServiceImpl implements CardService {
         Board board = this.boardRepository.findById(new BoardId(cmd.boardId()))
                 .orElseThrow(() -> new IllegalArgumentException("El tablero no existe"));
 
+        // --- NUEVO: Verificamos permisos ---
+        verificarPermisoEscritura(board, cmd.emailSolicitante());
+
         String traceLog = this.cardMovementService.moveCard(card, board, new ListId(cmd.targetListId()));
         log.info(traceLog);
 
@@ -108,7 +117,6 @@ public class CardServiceImpl implements CardService {
         this.cardRepository.save(card);
         this.boardRepository.save(board);
         
-        // Disparamos el evento para que las automatizaciones lo escuchen
         eventPublisher.publishEvent(new CardMovidaEvent(cmd.boardId(), cmd.cardId(), cmd.targetListId()));
     }
 
@@ -122,5 +130,16 @@ public class CardServiceImpl implements CardService {
         card.anadirEtiqueta(new Etiqueta(cmd.nombre(), cmd.color()));
         
         this.cardRepository.save(card);
+    }
+    
+ // --- HELPER PRIVADO EN LA CAPA DE APLICACIÓN ---
+    private void verificarPermisoEscritura(Board board, String emailSolicitante) {
+        if (emailSolicitante == null || emailSolicitante.isBlank()) {
+            throw new IllegalStateException("Usuario no autenticado");
+        }
+        Rol rol = board.obtenerRol(new Email(emailSolicitante));
+        if (!Rol.WRITE.equals(rol)) {
+            throw new IllegalStateException("El usuario no tiene permisos de escritura en este tablero");
+        }
     }
 }

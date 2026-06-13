@@ -13,10 +13,10 @@ import es.um.pds.tableros.domain.ports.input.card.commands.MoverCardCommand;
 public interface CardService {
 
     // Consultas básicas
-    Optional<Card> obtenerTarjetaPorId(CardId id);
+    Optional<Card> obtenerTarjetaPorId(String id);
     
     List<Card> obtenerTarjetasPorTablero(String boardId);
-    
+
     // Operaciones de negocio basadas en comandos
     Card crearNuevaTarjeta(CrearCardCommand cmd);
 

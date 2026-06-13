@@ -54,8 +54,8 @@ class CardServiceImplTest {
         when(boardRepository.findById(new BoardId("b1"))).thenReturn(Optional.of(boardSimulado));
 
         // null en el último parámetro = sin ítems de checklist
-        CrearCardCommand cmd = new CrearCardCommand("b1", validListId, "Nueva Tarea", "TASK", null, null);
-
+        CrearCardCommand cmd = new CrearCardCommand("b1", validListId, "Nueva Tarea", "TASK", null, null, null, "test@um.es");
+        
         // 2. Ejecutamos
         Card nuevaTarjeta = cardService.crearNuevaTarjeta(cmd);
 
@@ -79,8 +79,7 @@ class CardServiceImplTest {
         when(boardRepository.findById(new BoardId("b1"))).thenReturn(Optional.of(boardSimulado));
 
         // Creamos la Etiqueta del dominio directamente y pasamos null como 6º parámetro
-        Etiqueta etiqueta = new Etiqueta("Urgente", "#ff0000");
-        CrearCardCommand cmd = new CrearCardCommand("b1", validListId, "Nueva Tarea", "TASK", etiqueta, null);
+        CrearCardCommand cmd = new CrearCardCommand("b1", validListId, "Nueva Tarea", "TASK", "Urgente", "#ff0000", null, "test@um.es");
 
         // 2. Ejecutamos
         Card nuevaTarjeta = cardService.crearNuevaTarjeta(cmd);
@@ -106,8 +105,7 @@ class CardServiceImplTest {
 
         // Preparamos los pasos del checklist
         List<String> pasos = List.of("Paso 1", "Paso 2");
-        CrearCardCommand cmd = new CrearCardCommand("b1", validListId, "Revisión", "CHECKLIST", null, pasos);
-
+        CrearCardCommand cmd = new CrearCardCommand("b1", validListId, "Revisión", "CHECKLIST", null, null, pasos, "test@um.es");
         // 2. Ejecutamos
         Card nuevaTarjeta = cardService.crearNuevaTarjeta(cmd);
 
@@ -132,8 +130,7 @@ class CardServiceImplTest {
         when(cardMovementService.moveCard(eq(cardSimulada), eq(boardSimulado), any(ListId.class)))
             .thenReturn("Traza de prueba");
 
-        MoverCardCommand cmd = new MoverCardCommand("c1", "b1", "l2");
-
+        MoverCardCommand cmd = new MoverCardCommand("c1", "b1", "l2", "t@um.es");
         // 2. Ejecutamos
         cardService.moverTarjeta(cmd);
 
