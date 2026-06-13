@@ -14,9 +14,6 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import es.um.pds.tableros.domain.card.CardType;
-import es.um.pds.tableros.domain.card.Etiqueta;
 import es.um.pds.tableros.domain.ports.input.card.CardService;
 import es.um.pds.tableros.domain.ports.input.card.commands.CrearCardCommand;
 import es.um.pds.tableros.infrastructure.javafx.SceneManager;
@@ -26,17 +23,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-/**
- * Controlador del diálogo "Nueva Tarjeta" ({@code NuevaTarjeta.fxml}).
- */
 @Component
-@Scope("prototype") // Obliga a Spring a crear una instancia nueva cada vez que se abre la ventana
+@Scope("prototype") 
 public class NuevaTarjetaController implements Initializable {
 
     private final CardService cardService;
+    private final SceneManager sceneManager;
 
     @FXML private TextField          txtTitulo;
-    @FXML private ChoiceBox<CardType> cbTipo;
+    @FXML private ChoiceBox<String>  cbTipo; // AHORA ES UN STRING
     @FXML private TextField          txtEtiqueta;
     @FXML private ColorPicker        cpColor;
     
@@ -48,27 +43,26 @@ public class NuevaTarjetaController implements Initializable {
     private String listId;
     
     private final ObservableList<String> checklistItemsTemporales = FXCollections.observableArrayList();
-
-    private final SceneManager sceneManager;
     
     public NuevaTarjetaController(CardService cardService, SceneManager sceneManager) {
         this.cardService = cardService;
         this.sceneManager = sceneManager;
     }
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        cbTipo.getItems().addAll(CardType.values());
-        cbTipo.setValue(CardType.TASK);
+        // Rellenamos el ChoiceBox con Strings puros
+        cbTipo.getItems().addAll("TASK", "CHECKLIST");
+        cbTipo.setValue("TASK");
 
         cpColor.setValue(Color.web("#0079bf"));
-        
         listViewItems.setItems(checklistItemsTemporales);
         
         sectionChecklist.setVisible(false);
         sectionChecklist.setManaged(false);
         
         cbTipo.valueProperty().addListener((obs, oldVal, newVal) -> {
-            boolean isChecklist = (newVal == CardType.CHECKLIST);
+            boolean isChecklist = "CHECKLIST".equals(newVal);
             sectionChecklist.setVisible(isChecklist);
             sectionChecklist.setManaged(isChecklist);
         });
@@ -98,32 +92,29 @@ public class NuevaTarjetaController implements Initializable {
         }
 
         try {
-            // Solo cogemos los ítems si la tarjeta es realmente de tipo CHECKLIST
             List<String> itemsFinales = new ArrayList<>();
-            if (cbTipo.getValue() == CardType.CHECKLIST) {
+            if ("CHECKLIST".equals(cbTipo.getValue())) {
                 itemsFinales.addAll(checklistItemsTemporales);
             }
 
             String emailUsuario = sceneManager.getCurrentUserEmail();
             
-            // Y luego de itemsFinales, pásale el email (Nota: Ya quitamos la Etiqueta de dominio, ahora pasamos los 2 strings extraídos del helper)
-            String nombreEt = null;
-            String colorEt = null;
-            Etiqueta etiquetaDominio = construirEtiqueta();
-            if (etiquetaDominio != null) {
-                nombreEt = etiquetaDominio.nombre();
-                colorEt = etiquetaDominio.color();
+            // Procesamos la etiqueta como simples Strings (adiós al objeto Etiqueta)
+            String nombreEt = txtEtiqueta.getText().trim();
+            if (nombreEt.isBlank()) {
+                nombreEt = null;
             }
+            String colorEt = nombreEt != null ? colorToHex(cpColor.getValue()) : null;
 
             CrearCardCommand cmd = new CrearCardCommand(
                 boardId,
                 listId,
                 titulo,
-                cbTipo.getValue().name(),
-                nombreEt,        // String
-                colorEt,         // String
+                cbTipo.getValue(), // Ya es un String
+                nombreEt,        
+                colorEt,         
                 itemsFinales,
-                emailUsuario     // AÑADIDO
+                emailUsuario     
             );
             
             cardService.crearNuevaTarjeta(cmd);
@@ -148,15 +139,6 @@ public class NuevaTarjetaController implements Initializable {
     @FXML
     public void handleCancelar() {
         cerrarVentana();
-    }
-
-    private Etiqueta construirEtiqueta() {
-        String nombre = txtEtiqueta.getText().trim();
-        if (nombre.isBlank()) {
-            return null; 
-        }
-        String colorHex = colorToHex(cpColor.getValue());
-        return new Etiqueta(nombre, colorHex);
     }
 
     private String colorToHex(Color color) {
