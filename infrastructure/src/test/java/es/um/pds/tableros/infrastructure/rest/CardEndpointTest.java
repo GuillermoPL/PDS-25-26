@@ -1,12 +1,12 @@
 package es.um.pds.tableros.infrastructure.rest;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +30,7 @@ import es.um.pds.tableros.domain.card.CardType;
 import es.um.pds.tableros.domain.ports.output.BoardRepository;
 import es.um.pds.tableros.domain.ports.output.CardRepository;
 import es.um.pds.tableros.infrastructure.rest.dto.CardDTO;
+import es.um.pds.tableros.infrastructure.security.AuthSessionManager; // AÑADIDO
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -40,14 +41,18 @@ class CardEndpointTest {
     private final ObjectMapper objectMapper;
     private final BoardRepository boardRepository;
     private final CardRepository cardRepository;
+    private final AuthSessionManager sessionManager; // AÑADIDO
 
-    // Inyección por constructor para todas las dependencias
+    private String codigoValido; // AÑADIDO
+    private static final String EMAIL_TEST = "alumno@um.es"; // AÑADIDO
+
     @Autowired
-    public CardEndpointTest(MockMvc mockMvc, ObjectMapper objectMapper, BoardRepository boardRepository, CardRepository cardRepository) {
+    public CardEndpointTest(MockMvc mockMvc, ObjectMapper objectMapper, BoardRepository boardRepository, CardRepository cardRepository, AuthSessionManager sessionManager) {
         this.mockMvc = mockMvc;
         this.objectMapper = objectMapper;
         this.boardRepository = boardRepository;
         this.cardRepository = cardRepository;
+        this.sessionManager = sessionManager;
     }
 
     private static final String BASE = "/api/v1/tarjetas";
@@ -58,24 +63,23 @@ class CardEndpointTest {
 
     @BeforeEach
     void setUp() {
-        // Creamos un escenario base real en la base de datos antes de cada test
+        // Generamos un código válido en memoria antes de cada test para engañar al Interceptor
+        this.codigoValido = sessionManager.generarYGuardarCodigo(EMAIL_TEST);
+
         BoardId boardId = BoardId.generate();
-        boardBase = new Board(boardId, "Tablero de Pruebas", new Email("alumno@um.es"));
+        boardBase = new Board(boardId, "Tablero de Pruebas", new Email(EMAIL_TEST));
         
-        // Añadimos dos columnas/listas de ejemplo al tablero
         boardBase.addList("To Do", 10);
         boardBase.addList("In Progress", 5);
         
         idListaOrigen = boardBase.getTasksLists().get(0).getId().value();
         idListaDestino = boardBase.getTasksLists().get(1).getId().value();
         
-        // Guardamos el tablero en la BD para que los servicios puedan encontrarlo
         boardRepository.save(boardBase);
     }
 
     @Test
     void createTarjeta_datosValidos_devuelve201YTarjetaConId() throws Exception {
-        // Construimos el JSON dinámicamente inyectando los IDs reales creados en el setUp()
         String json = """
                 {
                     "boardId": "%s",
@@ -86,15 +90,16 @@ class CardEndpointTest {
                 """.formatted(boardBase.getId().value(), idListaOrigen);
 
         MvcResult result = mockMvc.perform(post(BASE)
+                        .header("X-User-Email", EMAIL_TEST) // AÑADIDO
+                        .header("X-Auth-Code", codigoValido) // AÑADIDO
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isCreated()) // 201 Created
+                .andExpect(status().isCreated()) 
                 .andExpect(jsonPath("$.titulo").value("Implementar Tests de Integración"))
                 .andExpect(jsonPath("$.tipo").value("TASK"))
                 .andExpect(jsonPath("$.listIdActual").value(idListaOrigen))
                 .andReturn();
 
-        // Verificamos que se le haya asignado un ID de dominio único
         String responseJson = result.getResponse().getContentAsString();
         CardDTO tarjetaGuardada = objectMapper.readValue(responseJson, CardDTO.class);
         assertNotNull(tarjetaGuardada.getId());
@@ -102,7 +107,6 @@ class CardEndpointTest {
 
     @Test
     void createTarjeta_conIdForzado_devuelve400() throws Exception {
-        // Enviar un ID en una creación debe ser rechazado por vuestro endpoint (400 Bad Request)
         String json = """
                 {
                     "id": "hack-id-forzado",
@@ -114,6 +118,8 @@ class CardEndpointTest {
                 """.formatted(boardBase.getId().value(), idListaOrigen);
 
         mockMvc.perform(post(BASE)
+                        .header("X-User-Email", EMAIL_TEST) // AÑADIDO
+                        .header("X-Auth-Code", codigoValido) // AÑADIDO
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isBadRequest());
@@ -121,31 +127,28 @@ class CardEndpointTest {
 
     @Test
     void getTarjeta_existente_devuelve200() throws Exception {
-        // Guardamos directamente una tarjeta física en la base de datos
         CardId cardId = CardId.generate();
         Card card = new Card(cardId, boardBase.getId(), new ListId(idListaOrigen), "Tarjeta a buscar", CardType.TASK);
         cardRepository.save(card);
 
-        // Intentamos recuperarla a través del endpoint GET
         mockMvc.perform(get(BASE + "/" + cardId.value())
+                        .header("X-User-Email", EMAIL_TEST) // AÑADIDO
+                        .header("X-Auth-Code", codigoValido) // AÑADIDO
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()) // 200 OK
+                .andExpect(status().isOk()) 
                 .andExpect(jsonPath("$.id").value(cardId.value()))
                 .andExpect(jsonPath("$.titulo").value("Tarjeta a buscar"));
     }
 
     @Test
     void moverTarjeta_movimientoValido_devuelve200() throws Exception {
-        // 1. Insertamos una tarjeta en la lista de origen en la BD
         CardId cardId = CardId.generate();
         Card card = new Card(cardId, boardBase.getId(), new ListId(idListaOrigen), "Tarea Movible", CardType.TASK);
         cardRepository.save(card);
         
-        // Sincronizamos el contador del tablero para simular que la tarjeta ya estaba ahí metida
         boardBase.registrarMovimientoTarjeta(null, new ListId(idListaOrigen));
         boardRepository.save(boardBase);
 
-        // 2. Preparamos el JSON del payload
         String jsonPayload = """
                 {
                     "boardId": "%s",
@@ -153,13 +156,13 @@ class CardEndpointTest {
                 }
                 """.formatted(boardBase.getId().value(), idListaDestino);
 
-        // 3. Ejecutamos el PUT de movimiento
         mockMvc.perform(put(BASE + "/" + cardId.value() + "/movimiento")
+                        .header("X-User-Email", EMAIL_TEST) // AÑADIDO
+                        .header("X-Auth-Code", codigoValido) // AÑADIDO
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonPayload))
-                .andExpect(status().isOk()); // 200 OK
+                .andExpect(status().isOk()); 
 
-        // 4. Verificación de seguridad extra: Consultamos la BD real para confirmar el cambio
         Card tarjetaEnBd = cardRepository.findById(cardId).orElseThrow();
         assertEquals(idListaDestino, tarjetaEnBd.getListIdActual().value(), "La tarjeta debería haber cambiado de lista en la BD");
     }
