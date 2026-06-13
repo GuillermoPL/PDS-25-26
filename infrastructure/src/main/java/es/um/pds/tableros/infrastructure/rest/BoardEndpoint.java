@@ -7,12 +7,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid; // Asegúrate de tener este import
 
 import es.um.pds.tableros.domain.ports.input.board.BoardService;
 import es.um.pds.tableros.domain.ports.input.board.commands.*;
 import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
 import es.um.pds.tableros.infrastructure.mappers.BoardMapper; 
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/tableros")
@@ -31,10 +31,9 @@ public class BoardEndpoint {
     // 1. Obtener un tablero por ID
     @GetMapping("/{id}")
     public ResponseEntity<BoardDTO> getTablero(
-            @PathVariable String id,
+            @PathVariable("id") String id, // <--- AÑADIR ("id")
             @RequestHeader(value = "X-User-Email", required = false) String emailUsuario) {
         try {
-            // Mapeamos a DTO primero, sin tocar la entidad de dominio
             Optional<BoardDTO> dtoOpt = boardService.obtenerTableroPorId(id)
                                                     .map(boardMapper::toDTO);
             
@@ -44,7 +43,6 @@ public class BoardEndpoint {
             
             BoardDTO dto = dtoOpt.get();
 
-            // Verificamos permisos leyendo los datos planos del DTO (como hicimos en JavaFX)
             if (emailUsuario == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
@@ -65,7 +63,7 @@ public class BoardEndpoint {
 
     // 2. Crear un nuevo tablero
     @PostMapping
-    public ResponseEntity<BoardDTO> createTablero(@Valid @RequestBody BoardDTO dto) {
+    public ResponseEntity<BoardDTO> createTablero(@Valid @RequestBody BoardDTO dto) { // <--- AÑADIR @Valid
         log.info("Petición para crear tablero '{}'", dto.getTitulo());
         
         if (dto.getId() != null) {
@@ -74,7 +72,6 @@ public class BoardEndpoint {
 
         try {
             CrearBoardCommand cmd = new CrearBoardCommand(dto.getTitulo(), dto.getEmail());
-            // No hay que verificar permisos aquí porque es un tablero nuevo
             var nuevoTablero = boardService.crearNuevoTablero(cmd);
             return ResponseEntity.status(HttpStatus.CREATED).body(boardMapper.toDTO(nuevoTablero));
         } catch (IllegalArgumentException e) {
@@ -85,11 +82,10 @@ public class BoardEndpoint {
     // 3. Añadir una lista/columna al tablero
     @PostMapping("/{id}/listas")
     public ResponseEntity<Void> anadirLista(
-            @PathVariable String id,
+            @PathVariable("id") String id, // <--- AÑADIR ("id")
             @RequestHeader(value = "X-User-Email", required = false) String emailUsuario,
-            @Valid @RequestBody AnadirListCommandPayload payload) {
+            @Valid @RequestBody AnadirListCommandPayload payload) { // <--- AÑADIR @Valid
         try {
-            // Pasamos el email del usuario al comando. El servicio decidirá si lanza IllegalStateException.
             AnadirListCommand cmd = new AnadirListCommand(id, payload.nombreLista(), payload.maxCards(), emailUsuario);
             boardService.anadirListaATablero(cmd);
             return ResponseEntity.ok().build();
@@ -104,11 +100,10 @@ public class BoardEndpoint {
     // 4. Cambiar estado de bloqueo
     @PutMapping("/{id}/bloqueo")
     public ResponseEntity<Void> cambiarBloqueo(
-            @PathVariable String id,
+            @PathVariable("id") String id, // <--- AÑADIR ("id")
             @RequestHeader(value = "X-User-Email", required = false) String emailUsuario,
-            @RequestParam boolean bloquear) {
+            @RequestParam("bloquear") boolean bloquear) { // <--- AÑADIR ("bloquear") por precaución
         try {
-            // Pasamos el email del usuario al comando
             CambiarBloqueoBoardCommand cmd = new CambiarBloqueoBoardCommand(id, bloquear, emailUsuario);
             boardService.cambiarEstadoBloqueo(cmd);
             return ResponseEntity.ok().build();
@@ -123,11 +118,10 @@ public class BoardEndpoint {
     // 5. Compartir con alguien
     @PostMapping("/{id}/permisos")
     public ResponseEntity<Void> compartirTablero(
-            @PathVariable String id,
+            @PathVariable("id") String id, // <--- AÑADIR ("id")
             @RequestHeader("X-User-Email") String emailSolicitante,
-            @Valid @RequestBody PermisosPayload payload) {
+            @Valid @RequestBody PermisosPayload payload) { // <--- AÑADIR @Valid
         try {
-            // El comando ya estaba preparado con emailSolicitante
             CompartirBoardCommand cmd = new CompartirBoardCommand(
                     id, emailSolicitante, payload.emailInvitado(), payload.rol());
             boardService.compartirTablero(cmd);
@@ -143,8 +137,8 @@ public class BoardEndpoint {
     // 6. Revocar acceso
     @DeleteMapping("/{id}/permisos/{emailAEliminar}")
     public ResponseEntity<Void> revocarAcceso(
-            @PathVariable String id,
-            @PathVariable String emailAEliminar,
+            @PathVariable("id") String id, // <--- AÑADIR ("id")
+            @PathVariable("emailAEliminar") String emailAEliminar, // <--- AÑADIR ("emailAEliminar")
             @RequestHeader("X-User-Email") String emailSolicitante) {
         try {
             boardService.revocarAcceso(id, emailSolicitante, emailAEliminar);

@@ -1,11 +1,12 @@
 package es.um.pds.tableros.infrastructure.rest;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
+import es.um.pds.tableros.infrastructure.security.AuthSessionManager;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -26,19 +28,28 @@ class BoardEndpointTest {
 
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
+    private final AuthSessionManager sessionManager; // AÑADIDO
 
-    // Inyección por constructor (Válido para JUnit 5 + Spring Boot)
+    private String codigoValido; // AÑADIDO
+    private static final String EMAIL_TEST = "alumno@um.es"; // AÑADIDO
+
     @Autowired
-    public BoardEndpointTest(MockMvc mockMvc, ObjectMapper objectMapper) {
+    public BoardEndpointTest(MockMvc mockMvc, ObjectMapper objectMapper, AuthSessionManager sessionManager) {
         this.mockMvc = mockMvc;
         this.objectMapper = objectMapper;
+        this.sessionManager = sessionManager;
     }
 
     private static final String BASE = "/api/v1/tableros";
 
+    @BeforeEach
+    void setUp() {
+        // Generamos un código válido en memoria antes de cada test para engañar al Interceptor
+        this.codigoValido = sessionManager.generarYGuardarCodigo(EMAIL_TEST);
+    }
+
     @Test
     void createTablero_datosValidos_devuelve201YTableroConId() throws Exception {
-        // 1. Preparamos el JSON que vamos a enviar
         String json = """
                 {
                     "titulo": "Tablero de Integración",
@@ -46,16 +57,16 @@ class BoardEndpointTest {
                 }
                 """;
 
-        // 2. Ejecutamos la petición POST real contra toda la aplicación
         MvcResult result = mockMvc.perform(post(BASE)
+                        .header("X-User-Email", EMAIL_TEST) // AÑADIDO
+                        .header("X-Auth-Code", codigoValido) // AÑADIDO
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isCreated()) // Esperamos un 201 CREATED
+                .andExpect(status().isCreated()) 
                 .andExpect(jsonPath("$.titulo").value("Tablero de Integración"))
                 .andExpect(jsonPath("$.email").value("alumno@um.es"))
                 .andReturn();
 
-        // 3. Podemos extraer la respuesta para comprobar que la BD le ha asignado un ID real
         String responseJson = result.getResponse().getContentAsString();
         BoardDTO tableroGuardado = objectMapper.readValue(responseJson, BoardDTO.class);
         
@@ -64,26 +75,28 @@ class BoardEndpointTest {
 
     @Test
     void createTablero_conIdForzado_devuelve400() throws Exception {
-        // Si mandamos un ID en la creación, el endpoint debe rechazarlo por seguridad
         String json = """
                 {
                     "id": "intentohackeo123",
                     "titulo": "Tablero Hack",
-                    "email": "hacker@um.es"
+                    "email": "alumno@um.es"
                 }
                 """;
 
         mockMvc.perform(post(BASE)
+                        .header("X-User-Email", EMAIL_TEST) // AÑADIDO
+                        .header("X-Auth-Code", codigoValido) // AÑADIDO
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isBadRequest()); // Esperamos un 400 BAD REQUEST
+                .andExpect(status().isBadRequest());
     }
     
     @Test
     void getTablero_idInexistente_devuelve404() throws Exception {
-        // Buscamos un tablero que sabemos que no existe en la BD
         mockMvc.perform(get(BASE + "/id_que_no_existe")
+                        .header("X-User-Email", EMAIL_TEST) // AÑADIDO
+                        .header("X-Auth-Code", codigoValido) // AÑADIDO
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound()); // Esperamos un 404 NOT FOUND
+                .andExpect(status().isNotFound());
     }
 }
