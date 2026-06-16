@@ -4,14 +4,28 @@ import es.um.pds.tableros.domain.board.Board;
 import es.um.pds.tableros.domain.board.ListId;
 import es.um.pds.tableros.domain.card.Card;
 
+/**
+ * @brief Servicio de Dominio (Domain Service) que orquesta el movimiento de tarjetas.
+ * @note En Arquitectura Hexagonal y DDD, los Servicios de Dominio se utilizan cuando una
+ * regla de negocio involucra a múltiples Agregados (en este caso, Card y Board) y la lógica
+ * no encaja de forma natural en ninguno de ellos por separado.
+ */
 public class CardMovementService {
 
-    // Constructor vacío por defecto
+    /**
+     * @brief Constructor por defecto del servicio de dominio.
+     */
     public CardMovementService() {}
 
     /**
-     * Mueve una tarjeta de lista validando las invariantes de negocio del tablero.
-     * @return String representación de la traza.
+     * @brief Gestiona el traslado de una tarjeta hacia una nueva lista, validando y sincronizando
+     * el estado de ambos agregados implicados.
+     * @param card La tarjeta que se desea mover.
+     * @param board El tablero donde ocurre la acción, encargado de validar las reglas.
+     * @param targetListId El identificador de la columna/lista destino.
+     * @return Cadena de texto plana con la traza o resumen descriptivo de la operación realizada.
+     * @throws IllegalArgumentException Si la tarjeta proporcionada no pertenece lógicamente al tablero indicado.
+     * @throws IllegalStateException Si el tablero prohíbe el movimiento (ej. la lista destino está llena).
      */
     public String moveCard(Card card, Board board, ListId targetListId) {
         if (!card.getBoardId().equals(board.getId())) {
