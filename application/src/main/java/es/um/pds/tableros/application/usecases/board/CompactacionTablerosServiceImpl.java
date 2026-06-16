@@ -12,10 +12,15 @@ import es.um.pds.tableros.domain.ports.input.board.CompactacionTablerosService;
 import es.um.pds.tableros.domain.ports.output.BoardRepository;
 import es.um.pds.tableros.domain.ports.output.CardRepository;
 
+/**
+ * @brief Implementación del servicio de compactación.
+ * Escanea todos los tableros del sistema y elimina de forma permanente las tareas
+ * antiguas que no han sido marcadas como completadas, actualizando el historial.
+ */
 @Service
 public class CompactacionTablerosServiceImpl implements CompactacionTablerosService {
 
-	private static final Logger log = LoggerFactory.getLogger(CompactacionTablerosServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(CompactacionTablerosServiceImpl.class);
     private static final int DIAS_ANTIGUEDAD = 7; 
 
     private final BoardRepository boardRepository;
@@ -31,7 +36,7 @@ public class CompactacionTablerosServiceImpl implements CompactacionTablerosServ
         log.info("Iniciando proceso automático de compactación de tableros...");
         int tarjetasBorradasTotal = 0;
 
-        List<Board> todosLosTableros = boardRepository.findAll(); // Asegúrate de tener findAll() en tu BoardRepository, si no, añádelo igual que el delete
+        List<Board> todosLosTableros = boardRepository.findAll(); 
 
         for (Board board : todosLosTableros) {
             List<Card> tarjetasDelTablero = cardRepository.findByBoardId(board.getId());

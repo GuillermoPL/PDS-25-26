@@ -32,6 +32,11 @@ import es.um.pds.tableros.domain.ports.output.BoardRepository;
 import es.um.pds.tableros.domain.ports.output.CardRepository;
 import es.um.pds.tableros.domain.services.CardMovementService;
 
+/**
+ * @brief Pruebas unitarias para el Servicio de Aplicación de Tarjetas (CardServiceImpl).
+ * Valida la correcta orquestación entre repositorios, el servicio de dominio (CardMovementService)
+ * y el manejador de eventos de la aplicación (ApplicationEventPublisher).
+ */
 @ExtendWith(MockitoExtension.class)
 class CardServiceImplTest {
 
@@ -51,6 +56,11 @@ class CardServiceImplTest {
     @InjectMocks
     private CardServiceImpl cardService;
 
+    /**
+     * @brief Verifica la creación de una tarea simple (tipo TASK) sin etiquetas iniciales.
+     * Asegura que se instancian sus datos básicos, que se delega la regla al tablero
+     * y que se guardan los estados de ambos agregados.
+     */
     @Test
     void testCrearNuevaTarjetaSinEtiqueta() {
         Board boardSimulado = new Board(new BoardId("b1"), "Tablero", new Email("test@um.es"));
@@ -72,6 +82,10 @@ class CardServiceImplTest {
         verify(boardRepository, times(1)).save(boardSimulado);
     }
 
+    /**
+     * @brief Valida la creación de una tarea inyectando una etiqueta directamente desde el comando.
+     * Comprueba que la entidad de dominio Etiqueta se construye correctamente en el servicio.
+     */
     @Test
     void testCrearNuevaTarjetaConEtiqueta() {
         Board boardSimulado = new Board(new BoardId("b1"), "Tablero", new Email("test@um.es"));
@@ -93,6 +107,9 @@ class CardServiceImplTest {
         verify(boardRepository, times(1)).save(boardSimulado);
     }
 
+    /**
+     * @brief Verifica la inicialización de tarjetas complejas (tipo CHECKLIST) con elementos precargados.
+     */
     @Test
     void testCrearNuevaTarjetaChecklist() {
         Board boardSimulado = new Board(new BoardId("b1"), "Tablero", new Email("test@um.es"));
@@ -115,6 +132,12 @@ class CardServiceImplTest {
         verify(boardRepository, times(1)).save(boardSimulado);
     }
 
+    /**
+     * @brief Comprueba la orquestación del movimiento de una tarjeta.
+     * Valida que el servicio delega la responsabilidad algorítmica al CardMovementService,
+     * sincroniza la base de datos para los agregados afectados y, finalmente, publica
+     * el evento asíncrono en el bus de la aplicación.
+     */
     @Test
     void testMoverTarjetaDelegaAlServicioDeDominioYGuarda() {
         Card cardSimulada = new Card(new CardId("c1"), new BoardId("b1"), new ListId("l1"), "Tarea", CardType.TASK);
@@ -134,5 +157,6 @@ class CardServiceImplTest {
         verify(boardRepository, times(1)).save(boardSimulado);
         
         // OPCIONAL: Podemos incluso verificar que se lanzó el evento correctamente
-        verify(eventPublisher, times(1)).publishEvent(any(Object.class));    }
+        verify(eventPublisher, times(1)).publishEvent(any(Object.class));
+    }
 }

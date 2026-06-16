@@ -25,6 +25,11 @@ import es.um.pds.tableros.domain.ports.input.board.commands.AnadirListCommand;
 import es.um.pds.tableros.domain.ports.input.board.commands.CrearBoardCommand;
 import es.um.pds.tableros.domain.ports.output.BoardRepository;
 
+/**
+ * @brief Pruebas unitarias para el Servicio de Aplicación de Tableros (BoardServiceImpl).
+ * Utiliza Mockito para simular el comportamiento de la capa de infraestructura (Repositorio)
+ * y validar exclusivamente la lógica de orquestación de los casos de uso.
+ */
 @ExtendWith(MockitoExtension.class)
 class BoardServiceImplTest {
 
@@ -34,6 +39,11 @@ class BoardServiceImplTest {
     @InjectMocks
     private BoardServiceImpl boardService;
 
+    /**
+     * @brief Verifica el caso de uso de creación de un nuevo tablero.
+     * Comprueba que se instancia correctamente el agregado de dominio y que
+     * se invoca el método de guardado en el repositorio simulado.
+     */
     @Test
     void testCrearNuevoTablero() {
         // 1. Preparamos el comando de entrada
@@ -51,6 +61,10 @@ class BoardServiceImplTest {
         verify(boardRepository, times(1)).save(any(Board.class));
     }
 
+    /**
+     * @brief Valida la adición de una lista a un tablero ya existente.
+     * Comprueba que el servicio recupera el tablero, inyecta la lista y persiste los cambios.
+     */
     @Test
     void testAnadirListaATableroExistente() {
         // 1. Preparamos un tablero simulado que el mock nos devolverá
@@ -70,6 +84,11 @@ class BoardServiceImplTest {
         verify(boardRepository, times(1)).save(boardSimulado);
     }
 
+    /**
+     * @brief Verifica el manejo de errores cuando se opera sobre un tablero inexistente.
+     * Garantiza que el servicio lanza la excepción adecuada y bloquea cualquier
+     * intento de escritura en la base de datos.
+     */
     @Test
     void testAnadirListaLanzaExcepcionSiTableroNoExiste() {
         // Configuramos el mock para simular que no encuentra el tablero
