@@ -23,28 +23,53 @@ import es.um.pds.tableros.domain.ports.input.board.commands.CrearReglaCommand;
 import es.um.pds.tableros.domain.ports.input.board.commands.DefinirListCompletadasCommand;
 import es.um.pds.tableros.domain.ports.output.BoardRepository;
 
+/**
+ * @brief Implementación del Puerto de Entrada BoardService. Orquesta los casos de uso
+ * relacionados con los tableros, gestionando la persistencia, la validación de permisos
+ * y la delegación de reglas de negocio al dominio.
+ */
 @Service
 public class BoardServiceImpl implements BoardService {
 
     private static final Logger log = LoggerFactory.getLogger(BoardServiceImpl.class);
     private final BoardRepository boardRepository;
 
+    /**
+     * @brief Constructor para inyección de dependencias.
+     * @param boardRepository Puerto de salida para interactuar con la base de datos de tableros.
+     */
     public BoardServiceImpl(BoardRepository boardRepository) {
         this.boardRepository = boardRepository;
     }
 
+    /**
+     * @brief Recupera un tablero encapsulando la conversión de tipos primitivos a Value Objects.
+     * @param id El identificador en formato texto crudo.
+     * @return Optional con el tablero si es encontrado por el repositorio.
+     */
     @Override
     public Optional<Board> obtenerTableroPorId(String id) {
         // La capa de aplicación protege al dominio transformando el String crudo
         return this.boardRepository.findById(new BoardId(id));
     }
 
+    /**
+     * @brief Lista los tableros de un usuario, forzando la validación de formato de correo.
+     * @param emailRaw Correo electrónico introducido por el usuario.
+     * @return Lista de tableros asociados.
+     * @throws IllegalArgumentException Si el formato del correo es inválido al instanciar el Value Object Email.
+     */
     @Override
     public List<Board> obtenerTablerosPorUsuario(String emailRaw) {
         Email emailValidado = new Email(emailRaw);
         return this.boardRepository.findByEmail(emailValidado.value());
     }
 
+    /**
+     * @brief Caso de uso para instanciar un nuevo tablero y persistirlo inicialmente.
+     * @param cmd Estructura con el título y el creador.
+     * @return El tablero completamente inicializado.
+     */
     @Override
     public Board crearNuevoTablero(CrearBoardCommand cmd) {
         log.info("Creando nuevo tablero '{}' para el usuario {}", cmd.titulo(), cmd.emailCreator());
@@ -58,6 +83,13 @@ public class BoardServiceImpl implements BoardService {
         return nuevoTablero;
     }
 
+    /**
+     * @brief Caso de uso para añadir una columna, garantizando previamente que el usuario tenga permisos.
+     * @param cmd Comando con los datos de la lista y el usuario que hace la solicitud.
+     * @return El ID de la lista generada.
+     * @throws IllegalArgumentException Si el tablero no existe.
+     * @throws IllegalStateException Si el usuario no tiene permisos o el tablero está bloqueado.
+     */
     @Override
     public String anadirListaATablero(AnadirListCommand cmd) {
         log.info("Añadiendo lista '{}' al tablero {}", cmd.nombreLista(), cmd.boardId());
@@ -75,6 +107,12 @@ public class BoardServiceImpl implements BoardService {
         return nuevaLista.getId().value();
     }
 
+    /**
+     * @brief Modifica el estado de bloqueo del tablero para pausar o reanudar su operativa.
+     * @param cmd Comando con el ID del tablero, la bandera de bloqueo y el usuario solicitante.
+     * @throws IllegalArgumentException Si el tablero no existe.
+     * @throws IllegalStateException Si el usuario carece de permisos de escritura.
+     */
     @Override
     public void cambiarEstadoBloqueo(CambiarBloqueoBoardCommand cmd) {
         log.info("Cambiando estado de bloqueo del tablero {} a: {}", cmd.boardId(), cmd.bloquear());
@@ -96,6 +134,11 @@ public class BoardServiceImpl implements BoardService {
         this.boardRepository.save(board);
     }
 
+    /**
+     * @brief Concede acceso a un nuevo usuario sobre el tablero validando que quien invita sea el dueño.
+     * @param cmd Comando con el correo del dueño, el del invitado y el rol a otorgar.
+     * @throws IllegalStateException Si el usuario solicitante no es el dueño original del tablero.
+     */
     @Override
     public void compartirTablero(CompartirBoardCommand cmd) {
         log.info("Compartiendo tablero {} con {}", cmd.boardId(), cmd.emailInvitado());
@@ -114,6 +157,13 @@ public class BoardServiceImpl implements BoardService {
         boardRepository.save(board);
     }
 
+    /**
+     * @brief Elimina los privilegios de un usuario sobre el tablero, verificando autoridad.
+     * @param boardId Identificador del tablero objetivo.
+     * @param emailSolicitante Correo de quien realiza la petición (debe ser el dueño).
+     * @param emailAEliminar Correo del usuario que perderá el acceso.
+     * @throws IllegalStateException Si el solicitante no es el dueño.
+     */
     @Override
     public void revocarAcceso(String boardId, String emailSolicitante, String emailAEliminar) {
         log.info("Revocando acceso de {} al tablero {}", emailAEliminar, boardId);
@@ -131,6 +181,11 @@ public class BoardServiceImpl implements BoardService {
         boardRepository.save(board);
     }
 
+    /**
+     * @brief Establece qué lista de tareas será considerada como el sumidero de las tarjetas finalizadas.
+     * @param cmd Comando con el ID del tablero y el ID de la lista elegida.
+     * @throws IllegalArgumentException Si la lista destino no se encuentra dentro del tablero.
+     */
     @Override
     public void definirListaCompletadas(DefinirListCompletadasCommand cmd) {
         log.info("Configurando la lista {} como la de tareas completadas del tablero {}", cmd.listId(), cmd.boardId());
@@ -153,6 +208,10 @@ public class BoardServiceImpl implements BoardService {
         this.boardRepository.save(board);
     }
 
+    /**
+     * @brief Registra una nueva regla de automatización generando su identificador interno.
+     * @param cmd Comando con la estructura del evento disparador y su acción resultante.
+     */
     @Override
     public void anadirReglaAutomatizacion(CrearReglaCommand cmd) {
         log.info("Añadiendo automatización al tablero {}", cmd.boardId());
@@ -173,7 +232,12 @@ public class BoardServiceImpl implements BoardService {
         boardRepository.save(board);
     }
 
-    // --- HELPER PRIVADO DE SEGURIDAD ---
+    /**
+     * @brief Método auxiliar interno (Helper) para aplicar la seguridad en los casos de uso.
+     * @param board El tablero donde se quiere realizar la acción.
+     * @param emailSolicitante El correo del usuario que ejecuta el comando.
+     * @throws IllegalStateException Si el usuario no está autenticado o carece de permisos de escritura.
+     */
     private void verificarPermisoEscritura(Board board, String emailSolicitante) {
         if (emailSolicitante == null || emailSolicitante.isBlank()) {
             throw new IllegalStateException("Usuario no autenticado");
