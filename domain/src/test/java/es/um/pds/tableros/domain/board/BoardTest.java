@@ -7,12 +7,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+/**
+ * @brief Batería de pruebas unitarias para el Agregado Raíz Board.
+ * Valida que las invariantes de negocio del tablero (bloqueos, límites de capacidad 
+ * y gestión de listas) se cumplen estrictamente antes de persistir cualquier cambio.
+ */
 class BoardTest {
 
     private Board board;
     private BoardId boardId;
     private Email email;
 
+    /**
+     * @brief Configuración inicial para cada prueba.
+     * Instancia un tablero limpio con un identificador y propietario por defecto.
+     */
     @BeforeEach
     void setUp() {
         boardId = new BoardId("b1");
@@ -20,6 +29,10 @@ class BoardTest {
         board = new Board(boardId, "Tablero de Proyecto", email);
     }
 
+    /**
+     * @brief Verifica el flujo normal de creación de listas en un tablero operativo.
+     * Comprueba que la lista se añade correctamente a la colección interna del agregado.
+     */
     @Test
     void testAnadirListaFuncionaSiTableroDesbloqueado() {
         board.addList("To Do", 5);
@@ -27,6 +40,10 @@ class BoardTest {
         assertEquals("To Do", board.getTasksLists().get(0).getNombre());
     }
 
+    /**
+     * @brief Valida la invariante de negocio de bloqueo del tablero.
+     * Un tablero bloqueado debe rechazar la creación de nuevas listas lanzando una excepción.
+     */
     @Test
     void testAnadirListaLanzaExcepcionSiTableroBloqueado() {
         board.lock();
@@ -39,6 +56,11 @@ class BoardTest {
         assertEquals("No se pueden añadir listas a un tablero bloqueado", exception.getMessage());
     }
 
+    /**
+     * @brief Comprueba la aplicación estricta del límite WIP (Work In Progress).
+     * Si una lista ha alcanzado su capacidad máxima configurada, el sistema debe 
+     * impedir la entrada de nuevas tarjetas.
+     */
     @Test
     void testVerificaAnadirCardRespetaLimiteLista() {
         // Añadimos una lista con un límite estricto de 2 tarjetas
@@ -58,6 +80,11 @@ class BoardTest {
         assertTrue(exception.getMessage().contains("ha alcanzado su límite máximo de tarjetas"));
     }
 
+    /**
+     * @brief Valida la coherencia de los contadores internos de las listas.
+     * Al registrar un movimiento, la lista de origen debe decrementar su contador
+     * y la de destino incrementarlo, manteniendo la consistencia de los datos.
+     */
     @Test
     void testRegistrarMovimientoTarjetaActualizaContadores() {
         board.addList("Origen", null);

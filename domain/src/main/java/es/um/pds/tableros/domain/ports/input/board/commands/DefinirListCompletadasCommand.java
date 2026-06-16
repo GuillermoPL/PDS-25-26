@@ -1,6 +1,10 @@
 package es.um.pds.tableros.domain.ports.input.board.commands;
 
-// 3. Definir la lista de completadas
+/**
+ * @brief Estructura de datos (Command) para designar la lista de tareas finalizadas.
+ * @param boardId Identificador del tablero sobre el que se aplica la configuración.
+ * @param listId Identificador de la lista/columna que actuará como sumidero de "Done".
+ */
 public record DefinirListCompletadasCommand(
     String boardId,
     String listId

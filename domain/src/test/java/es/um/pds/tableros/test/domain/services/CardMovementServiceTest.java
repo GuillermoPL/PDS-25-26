@@ -17,6 +17,11 @@ import es.um.pds.tableros.domain.card.CardId;
 import es.um.pds.tableros.domain.card.CardType;
 import es.um.pds.tableros.domain.services.CardMovementService;
 
+/**
+ * @brief Pruebas de integración a nivel de Dominio para el CardMovementService.
+ * Valida la correcta interacción y sincronización entre los agregados Card y Board
+ * cuando ocurre una transferencia compleja (movimiento de tarjetas entre listas).
+ */
 class CardMovementServiceTest {
 
     private CardMovementService movementService;
@@ -27,6 +32,10 @@ class CardMovementServiceTest {
     private ListId idListaDestino;
     private ListId idListaCompletadas;
 
+    /**
+     * @brief Prepara un escenario complejo de pruebas con un tablero,
+     * múltiples listas con diferentes límites y una lista designada como "Completada".
+     */
     @BeforeEach
     void setUp() {
         movementService = new CardMovementService();
@@ -46,6 +55,11 @@ class CardMovementServiceTest {
         board.defineListCompletadas(idListaCompletadas);
     }
 
+    /**
+     * @brief Valida un traslado exitoso.
+     * Comprueba que la tarjeta adquiere el nuevo ID de lista y que el tablero
+     * balancea correctamente los contadores de las columnas implicadas.
+     */
     @Test
     void testMovimientoValidoActualizaListasYContadores() {
         // 1. Creamos la tarjeta en la lista de origen
@@ -64,6 +78,10 @@ class CardMovementServiceTest {
         assertTrue(traza.contains("movida de la lista"));
     }
 
+    /**
+     * @brief Verifica la protección de consistencia lógica cruzada.
+     * El servicio debe rechazar mover una tarjeta sobre un tablero al que no pertenece.
+     */
     @Test
     void testLanzaExcepcionSiTarjetaNoPerteneceAlTablero() {
         // Tarjeta asociada a un tablero "b99" distinto al nuestro ("b1")
@@ -76,6 +94,10 @@ class CardMovementServiceTest {
         assertEquals("La tarjeta no pertenece al tablero especificado", exception.getMessage());
     }
 
+    /**
+     * @brief Valida que el servicio de dominio delega y respeta las invariantes
+     * del tablero, impidiendo un movimiento si la lista de destino está llena.
+     */
     @Test
     void testLanzaExcepcionAlSuperarLimiteDeListaDestino() {
         Card card1 = new Card(new CardId("c1"), boardId, idListaOrigen, "Tarea 1", CardType.TASK);
@@ -92,6 +114,11 @@ class CardMovementServiceTest {
         assertTrue(exception.getMessage().contains("ha alcanzado su límite máximo"));
     }
 
+    /**
+     * @brief Comprueba el efecto automatizado del dominio.
+     * Al mover una tarjeta a la lista configurada como "Completadas", la tarjeta
+     * debe auto-marcarse como completada a nivel interno.
+     */
     @Test
     void testMoverAListaCompletadasMarcaTarjetaComoCompletada() {
         Card card = new Card(new CardId("c1"), boardId, idListaOrigen, "Acabar proyecto", CardType.TASK);
