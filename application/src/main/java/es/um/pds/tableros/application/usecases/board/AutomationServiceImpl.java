@@ -14,17 +14,30 @@ import es.um.pds.tableros.domain.ports.input.card.commands.AnadirEtiquetaCommand
 import es.um.pds.tableros.domain.ports.input.card.commands.MoverCardCommand;
 import es.um.pds.tableros.domain.ports.output.BoardRepository;
 
+/**
+ * @brief Servicio de Aplicación encargado de procesar y ejecutar las reglas de automatización.
+ * Actúa como un listener de eventos de dominio/aplicación, reaccionando de forma asíncrona o 
+ * desacoplada a los cambios producidos en el sistema para desencadenar acciones automáticas.
+ */
 @Service
 public class AutomationServiceImpl {
 
     private final BoardRepository boardRepository;
     private final CardService cardService;
 
+    /**
+     * @brief Inyecta las dependencias necesarias para leer tableros y manipular tarjetas.
+     */
     public AutomationServiceImpl(BoardRepository boardRepository, CardService cardService) {
         this.boardRepository = boardRepository;
         this.cardService = cardService;
     }
 
+    /**
+     * @brief Escucha los eventos de movimiento de tarjetas e intercepta aquellos que cumplen
+     * las condiciones (triggers) definidos en las reglas del tablero.
+     * @param evento El evento que contiene los IDs del tablero, tarjeta y lista de destino.
+     */
     @EventListener
     public void procesarReglasPorMovimiento(CardMovidaEvent evento) {
         Board board = boardRepository.findById(new BoardId(evento.boardId())).orElse(null);
@@ -40,6 +53,12 @@ public class AutomationServiceImpl {
         }
     }
 
+    /**
+     * @brief Ejecuta la acción consecuente de una regla de automatización que ha sido disparada.
+     * @param accion El tipo de acción a ejecutar (ej. añadir etiqueta, marcar como completada).
+     * @param board El agregado del tablero donde ocurre la acción.
+     * @param cardId El identificador de la tarjeta sobre la que recaerá el efecto.
+     */
     private void ejecutarAccion(ActionType accion, Board board, String cardId) {
         switch (accion) {
             case MARCAR_COMO_COMPLETADA -> {
