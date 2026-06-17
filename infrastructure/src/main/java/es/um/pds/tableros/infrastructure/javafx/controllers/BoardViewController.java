@@ -42,6 +42,13 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+
+/**
+ * @brief Controlador de la vista del tablero (JavaFX Controller).
+ * Clase de la capa de infraestructura encargada de gestionar y pintar la vista interactiva 
+ * de un tablero Kanban, sus listas de tareas (columnas) y las tarjetas. Controla la lógica visual, 
+ * los filtros por etiquetas/colores, las operaciones drag-and-drop y la delegación de comandos.
+ */
 @Component
 public class BoardViewController {
 
@@ -72,7 +79,15 @@ public class BoardViewController {
     private String  filtroColorActual  = SIN_FILTRO_COLOR;
     private String listCompletadasId;
 
-    // ── Constructor ───────────────────────────────────────────────────────────
+    /**
+     * @brief Constructor con inyección automática de dependencias de la infraestructura y el dominio.
+     * @param boardService Puerto de entrada para gestionar la lógica de tableros.
+     * @param cardService Puerto de entrada para gestionar la lógica de tarjetas.
+     * @param boardMapper Componente de mapeo para DTOs y Entidades de tablero.
+     * @param cardMapper Componente de mapeo para DTOs y Entidades de tarjeta.
+     * @param springContext Contexto de Spring utilizado para la factoría de controladores secundarios.
+     * @param sceneManager Gestor de navegación de escenas de la aplicación.
+     */
     public BoardViewController(BoardService boardService, CardService cardService,
                                BoardMapper boardMapper, CardMapper cardMapper,
                                ApplicationContext springContext, SceneManager sceneManager) { // <--- NUEVO: Inyectamos
@@ -85,6 +100,11 @@ public class BoardViewController {
     }
 
     // ── Punto de entrada desde SceneManager ───────────────────────────────────
+    
+    /**
+     * @brief Inicializa el estado del tablero visual basándose en un identificador único.
+     * @param boardId Identificador de la base de datos del tablero a renderizar.
+     */
     public void inicializarTablero(String boardId) {
         this.boardIdActual = boardId;
         configurarCeldaColor(); // configura la cellFactory UNA sola vez
@@ -92,6 +112,13 @@ public class BoardViewController {
     }
 
     // ── Renderizado principal ─────────────────────────────────────────────────
+    
+    /**
+     * @brief Redibuja por completo la interfaz gráfica del tablero Kanban.
+     * Limpia los componentes visuales anteriores, lee el estado del tablero actual, 
+     * calcula los permisos de escritura del usuario activo, aplica los filtros a las tarjetas 
+     * y genera dinámicamente los elementos VBox de las listas en el contenedor horizontal.
+     */
     private void renderizarTodo() {
         hboxColumnas.getChildren().clear();
 
@@ -134,6 +161,11 @@ public class BoardViewController {
     }
 
     // ── Actualización de ComboBoxes ───────────────────────────────────────────
+    
+    /**
+     * @brief Refresca los ítems del filtro por nombre de etiqueta basándose en los datos actuales.
+     * @param tarjetas Lista completa de tarjetas del tablero.
+     */
     private void actualizarComboNombre(List<CardDTO> tarjetas) {
         List<String> nombres = tarjetas.stream()
                 .filter(c -> c.getEtiquetas() != null)
@@ -156,6 +188,10 @@ public class BoardViewController {
         });
     }
 
+    /**
+     * @brief Refresca los ítems del filtro cromático basándose en los códigos de color actuales.
+     * @param tarjetas Lista completa de tarjetas del tablero.
+     */
     private void actualizarComboColor(List<CardDTO> tarjetas) {
         List<String> colores = tarjetas.stream()
                 .filter(c -> c.getEtiquetas() != null)
@@ -178,6 +214,11 @@ public class BoardViewController {
         });
     }
 
+    /**
+     * @brief Configura las celdas personalizadas del ComboBox de color.
+     * Modifica el renderizado nativo de JavaFX instalando una factoría para pintar un 
+     * Rectangle con el color web correspondiente al lado del texto identificativo.
+     */
     private void configurarCeldaColor() {
         cbFiltroColor.setCellFactory(lv -> new ListCell<>() {
             private final Rectangle rect = new Rectangle(16, 16);
@@ -251,12 +292,23 @@ public class BoardViewController {
     }
 
     // ── Predicados de filtro ──────────────────────────────────────────────────
+    
+    /**
+     * @brief Evalúa si una tarjeta cumple con la selección del filtro por nombre de etiqueta.
+     * @param c Instancia de tarjeta DTO.
+     * @return true si supera el filtro, false en caso contrario.
+     */
     private boolean pasaFiltroNombre(CardDTO c) {
         if (SIN_FILTRO_NOMBRE.equals(filtroNombreActual)) return true;
         return c.getEtiquetas() != null &&
                c.getEtiquetas().stream().anyMatch(e -> filtroNombreActual.equals(e.getNombre()));
     }
 
+    /**
+     * @brief Evalúa si una tarjeta cumple con la selección del filtro por color de etiqueta.
+     * @param c Instancia de tarjeta DTO.
+     * @return true si supera el filtro, false en caso contrario.
+     */
     private boolean pasaFiltroColor(CardDTO c) {
         if (SIN_FILTRO_COLOR.equals(filtroColorActual)) return true;
         return c.getEtiquetas() != null &&
@@ -264,6 +316,17 @@ public class BoardViewController {
     }
 
     // ── Construcción de columnas ───────────────────────────────────────────────
+    
+    /**
+     * @brief Fabrica programáticamente la estructura gráfica VBox de una columna (Lista de tareas).
+     * Aplica estilos condicionales si es la columna Done, renderiza sus tarjetas e inicializa los 
+     * escuchadores DragOver y DragDropped para procesar movimientos interactivos mediante comandos.
+     * @param listId ID único de la lista.
+     * @param nombreLista Nombre legible de la lista.
+     * @param tarjetas Colección filtrada de tarjetas que contiene.
+     * @param esListaCompletadas Indica si es la lista especial designada para tareas finalizadas.
+     * @return El contenedor VBox de la columna listo para añadirse a la escena.
+     */
     private VBox crearColumnaVisual(String listId, String nombreLista, List<CardDTO> tarjetas, boolean esListaCompletadas) {
     	VBox columna = new VBox(8);
     	columna.setPrefWidth(250);
@@ -329,6 +392,13 @@ public class BoardViewController {
 		return columna;
 	}
 
+    /**
+     * @brief Construye programáticamente el componente visual VBox para representar una tarjeta.
+     * Estiliza el recuadro según su estado, añade indicadores, dibuja los sub-elementos de checklists 
+     * y chips de etiquetas, inyecta el botón rápido de completado e inicializa los disparadores DragDetected.
+     * @param tarjeta Estructura DTO de datos planos de la tarjeta.
+     * @return El nodo VBox de la tarjeta.
+     */
     private VBox crearTarjetaVisual(CardDTO tarjeta) {
         VBox tarjetaVisual = new VBox(4);
 
@@ -439,11 +509,18 @@ public class BoardViewController {
 
     // ── Acciones FXML ──────────────────────────────────────────────────────────
     
+    /**
+     * @brief Maneja el evento FXML para retroceder al Dashboard de tableros.
+     */
     @FXML
     public void handleVolver() {
         sceneManager.navigateToDashboard();
     }
     
+    /**
+     * @brief Maneja el evento FXML para alternar el estado de bloqueo del tablero.
+     * Comprueba permisos de escritura y orquesta la llamada al caso de uso.
+     */
     @FXML
     public void handleAlternarBloqueo() {
         if (!this.tienePermisoEscrituraActual) {
@@ -465,6 +542,9 @@ public class BoardViewController {
         }
     }
 
+    /**
+     * @brief Maneja el evento FXML para desplegar de forma modal la ventana de adición de listas.
+     */
     @FXML
     public void handleAnadirListaVentana() {
     	if (!this.tienePermisoEscrituraActual) {
@@ -489,6 +569,9 @@ public class BoardViewController {
         }
     }
     
+    /**
+     * @brief Maneja el evento FXML para desplegar de forma modal el panel de definición de la lista Done.
+     */
     @FXML
     public void handleAjustesTablero() {
     	if (!this.tienePermisoEscrituraActual) {
@@ -517,6 +600,9 @@ public class BoardViewController {
         }
     }
 
+    /**
+     * @brief Maneja el evento FXML para desplegar modalmente las trazas del historial de auditoría.
+     */
     @FXML
     public void handleVerHistorial() {
         try {
@@ -536,6 +622,9 @@ public class BoardViewController {
         }
     }
 
+    /**
+     * @brief Resetea los filtros activos limpiando los estados de selección y redibujando la vista.
+     */
     @FXML
     public void handleLimpiarFiltros() {
         filtroNombreActual = SIN_FILTRO_NOMBRE;
@@ -543,6 +632,10 @@ public class BoardViewController {
         renderizarTodo();
     }
     
+    /**
+     * @brief Maneja el evento FXML para desplegar e interactuar con la gestión compartida de accesos.
+     * Crea controles dinámicos en memoria y coordina las llamadas de invitación o revocación de permisos.
+     */
     @FXML
     public void handleCompartirTablero() {
     	if (!this.tienePermisoEscrituraActual) {
@@ -648,6 +741,10 @@ public class BoardViewController {
         dialog.showAndWait();
     }
     
+    /**
+     * @brief Maneja el evento FXML para configurar y dar de alta reglas de automatización.
+     * Despliega un formulario para asociar un trigger posicional con una acción del dominio.
+     */
     @FXML
     public void handleAutomatizaciones() {
         if (!this.tienePermisoEscrituraActual) {
@@ -747,6 +844,11 @@ public class BoardViewController {
         dialog.showAndWait();
     }
 
+    /**
+     * @brief Formatea y vuelca las reglas de automatización activas en el ListView de control.
+     * @param lista Componente ListView de destino.
+     * @param tableroDTO DTO de datos del tablero.
+     */
     private void actualizarListaReglas(ListView<String> lista, BoardDTO tableroDTO) {
         if (tableroDTO.getReglas() != null) {
             lista.getItems().setAll(
@@ -767,7 +869,12 @@ public class BoardViewController {
             lista.getItems().clear();
         }
     }
-    // ── Helper: rellena la ListView con los permisos actuales ─────────────────
+    
+    /**
+     * @brief Formatea e inyecta la traza de correos y roles colaboradores asignados en el ListView modal.
+     * @param lista Componente ListView de destino.
+     * @param tableroDTO DTO de datos del tablero.
+     */
     private void actualizarListaPermisos(ListView<String> lista, BoardDTO tableroDTO) {
         if (tableroDTO.getPermisos() != null) {
             lista.getItems().setAll(
@@ -781,6 +888,11 @@ public class BoardViewController {
     }
     
     // ── Helpers ───────────────────────────────────────────────────────────────
+    
+    /**
+     * @brief Despliega de manera modal el cuadro secundario FXML para dar de alta nuevas tarjetas.
+     * @param listId Identificador String de la columna contenedora donde nacerá la tarjeta.
+     */
     private void abrirDialogoNuevaTarjeta(String listId) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/NuevaTarjeta.fxml"));
@@ -801,10 +913,18 @@ public class BoardViewController {
         }
     }
 
+    /**
+     * @brief Extrae de forma reflexiva la ventana Stage principal del escenario activo.
+     * @return Instancia de tipo Window superior.
+     */
     private Window obtenerVentanaPrincipal() {
         return hboxColumnas.getScene().getWindow();
     }
 
+    /**
+     * @brief Despliega un cuadro de diálogo informativo (Warning Alert) ante bloqueos del dominio o WIP limits.
+     * @param mensaje Detalle del texto aclaratorio.
+     */
     private void mostrarAlertaRegla(String mensaje) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("Movimiento denegado");
@@ -813,6 +933,11 @@ public class BoardViewController {
         alert.showAndWait();
     }
 
+    /**
+     * @brief Despliega un popup flotante modal informativo de error crítico (Error Alert) en la vista.
+     * @param titulo Encabezado o título identificativo del modal.
+     * @param mensaje Detalle técnico del error capturado por excepciones de infraestructura.
+     */
     private void mostrarAlertaError(String titulo, String mensaje) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(titulo);
@@ -821,6 +946,10 @@ public class BoardViewController {
         alert.showAndWait();
     }
     
+    /**
+     * @brief Consulta síncronamente el estado rehidratado de los datos del tablero llamando al puerto de entrada.
+     * @return Instancia limpia de tipo BoardDTO.
+     */
     private BoardDTO obtenerTableroActualizado() {
         return boardService.obtenerTableroPorId(boardIdActual)
                 .map(boardMapper::toDTO)

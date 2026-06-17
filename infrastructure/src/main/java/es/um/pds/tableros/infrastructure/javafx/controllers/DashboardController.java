@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import es.um.pds.tableros.domain.ports.input.board.BoardService;
 import es.um.pds.tableros.domain.ports.input.board.commands.CrearBoardCommand;
-import es.um.pds.tableros.infrastructure.javafx.SceneManager; // Importamos el manager
+import es.um.pds.tableros.infrastructure.javafx.SceneManager;
 import es.um.pds.tableros.infrastructure.mappers.BoardMapper;
 import es.um.pds.tableros.infrastructure.plantillas.PlantillaService;
 import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
@@ -17,19 +17,36 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 
+/**
+ * @brief Controlador visual (JavaFX Controller) para la pantalla principal del Dashboard.
+ * Gestiona el panel principal donde los usuarios visualizan sus tableros asociados,
+ * tanto propios como compartidos. Permite la creación de tableros en blanco, la inicialización
+ * a partir de archivos de plantilla YAML y la navegación interactiva hacia un tablero concreto.
+ */
 @Component
 public class DashboardController {
 
     private final BoardService boardService;
     private final BoardMapper boardMapper;
-    private final SceneManager sceneManager; // Añadimos la dependencia
+    private final SceneManager sceneManager;
     private final PlantillaService plantillaService;
     
+    /** Campo de texto FXML que almacena de forma inalterable el email del usuario en sesión. */
     @FXML private TextField txtEmail;
+    
+    /** Componente de lista FXML encargado de renderizar los títulos y roles de los tableros del usuario. */
     @FXML private ListView<String> listTableros;
+    
+    /** Colección local que actúa como caché en memoria de los tableros rehidratados de la consulta actual. */
     private List<BoardDTO> tablerosCargados;
 
-    // Spring se encarga de inyectar las tres piezas de forma automática
+    /**
+     * @brief Constructor con inyección automatizada de componentes de aplicación e infraestructura.
+     * @param boardService Puerto de entrada para interactuar con la lógica relacional de tableros.
+     * @param boardMapper Mapeador auxiliar para transformar objetos de dominio a DTOs de vista.
+     * @param sceneManager Administrador transversal encargado del enrutamiento gráfico de las escenas.
+     * @param plantillaService Servicio técnico capaz de deserializar y construir estructuras desde YAML.
+     */
     public DashboardController(
             BoardService boardService,
             BoardMapper boardMapper,
@@ -41,21 +58,31 @@ public class DashboardController {
         this.sceneManager = sceneManager;
         this.plantillaService = plantillaService;
     }
+
+    /**
+     * @brief Inicializador automático del ciclo de vida del nodo de JavaFX.
+     * Recupera de forma segura el email del usuario autenticado en la ventana previa, 
+     * bloquea el cuadro de búsqueda para asegurar la integridad de acceso y lanza la 
+     * carga inmediata de los datos asociados en la lista visual.
+     */
     @FXML
     public void initialize() {
         String emailGuardado = sceneManager.getCurrentUserEmail();
-        // Ponemos el texto en el campo (puedes ponerlo deshabilitado para que no lo cambien)
         txtEmail.setText(emailGuardado); 
-        txtEmail.setDisable(true); // Bloqueamos el campo para que no busquen los tableros de otro sin permiso
+        txtEmail.setDisable(true); // Bloqueamos el campo para evitar su manipulación maliciosa en la interfaz
         
-        // Cargamos los tableros de ese usuario automáticamente
         handleCargarTableros(); 
     }
+
+    /**
+     * @brief Gestiona la acción de creación de un nuevo tablero Kanban vacío.
+     * Despliega un cuadro flotante interactivo de captura de texto para adquirir el título deseado,
+     * construye de forma determinista el comando inmutable y lo despacha al backend persistiendo los cambios.
+     */
     @FXML
     public void handleCrearTablero() {
         String email = txtEmail.getText();
 
-        // 1. Validamos que el usuario haya introducido un email antes de dejarle crear un tablero
         if (email == null || email.isBlank()) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Falta Información");
@@ -65,25 +92,22 @@ public class DashboardController {
             return;
         }
         sceneManager.setCurrentUserEmail(email);
-        // 2. Abrimos un cuadro de diálogo flotante para pedir el título del tablero
+
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Nuevo Tablero");
         dialog.setHeaderText("Crear un nuevo tablero Kanban");
         dialog.setContentText("Introduce el título del tablero:");
 
-        // 3. Si el usuario pulsa 'Aceptar', capturamos el título y llamamos al backend
         dialog.showAndWait().ifPresent(titulo -> {
             if (!titulo.isBlank()) {
                 try {
-                    // Construimos el comando inmutable y llamamos a tu servicio de aplicación
                     CrearBoardCommand cmd = new CrearBoardCommand(titulo, email);
                     boardService.crearNuevoTablero(cmd);
 
-                    // 4. Refrescamos la lista automáticamente para que aparezca el tablero recién creado
+                    // Refrescamos la lista automáticamente tras la creación exitosa
                     handleCargarTableros();
 
                 } catch (Exception e) {
-                    // Capturamos cualquier error de validación (por ejemplo, si el email es inválido para el dominio)
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Error al crear");
                     alert.setHeaderText("No se pudo crear el tablero");
@@ -94,13 +118,17 @@ public class DashboardController {
         });
     }
     
-    
+    /**
+     * @brief Orquesta la recarga y renderizado de los tableros del usuario actual.
+     * Consulta el puerto de entrada, mapea las colecciones del dominio a tipos de transferencia planos
+     * y evalúa de manera adaptativa si el usuario ostenta el rango de propietario o invitado 
+     * en cada entrada para formatear e inyectar el texto representativo final en el ListView.
+     */
     @FXML
     public void handleCargarTableros() {
         String email = txtEmail.getText();
         
         try {
-        	// Validamos primero que no le den a buscar con el campo vacío
             if (email == null || email.isBlank()) {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Campo vacío");
@@ -110,7 +138,7 @@ public class DashboardController {
                 return;
             }
             sceneManager.setCurrentUserEmail(email);
-            // La vista solo llama al puerto de entrada de la aplicación
+            
             tablerosCargados = boardService.obtenerTablerosPorUsuario(email).stream()
                     .map(boardMapper::toDTO)
                     .toList();
@@ -127,27 +155,22 @@ public class DashboardController {
                 tablerosCargados.forEach(t -> {
                     String etiquetaRol;
                     
-                    // Comprobamos si el correo buscado es el del dueño
                     if (email.equalsIgnoreCase(t.getEmail())) {
                         etiquetaRol = "Propietario";
                     } 
-                    // Si no es el dueño, buscamos su rol en el mapa de permisos
                     else if (t.getPermisos() != null && t.getPermisos().containsKey(email)) {
                         etiquetaRol = t.getPermisos().get(email);
                     } 
-                    // Por seguridad, si hay un fallo y no está en ninguno
                     else {
                         etiquetaRol = "Acceso desconocido";
                     }
                     
-                    // Añadimos el título + el rol a la lista visual
                     listTableros.getItems().add(t.getTitulo() + " — [" + etiquetaRol + "]");
                 });
             }
 
         } catch (IllegalArgumentException e) {
-            // Capturamos el portazo que ha dado el dominio dentro del servicio
-        	Alert alert = new Alert(Alert.AlertType.WARNING);
+            Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Correo inválido");
             alert.setHeaderText(null);
             alert.setContentText("Correo inválido.");
@@ -156,19 +179,27 @@ public class DashboardController {
         }
     }
 
+    /**
+     * @brief Maneja la selección de un tablero físico dentro del ListView.
+     * Extrae el DTO indexado en la caché en concordancia con la selección y le encomienda 
+     * al administrador de la ventana la navegación y trasbordo técnico de la vista detallada.
+     */
     @FXML
     public void handleSeleccionarTablero() {
         int index = listTableros.getSelectionModel().getSelectedIndex();
         if (index >= 0) {
             BoardDTO tableroSeleccionado = tablerosCargados.get(index);
-            
-            // Llamamos al manager para que efectúe el viaje de pantalla
             this.sceneManager.navigateToBoard(tableroSeleccionado.getId());
         }
     }
+
+    /**
+     * @brief Despliega un menú interactivo para instanciar estructuras de tableros preconfiguradas.
+     * Ofrece un catálogo flotante de archivos YAML (básica, ágil), parsea el fichero seleccionado 
+     * construyendo el grafo transaccional de columnas y tareas por defecto, y refresca la interfaz.
+     */
     @FXML
     public void handleCrearDesdePlantilla() {
-
         String email = txtEmail.getText();
 
         if (email == null || email.isBlank()) {
@@ -190,18 +221,21 @@ public class DashboardController {
         dialog.setHeaderText("Selecciona una plantilla");
 
         dialog.showAndWait().ifPresent(nombrePlantilla -> {
-
             plantillaService.crearTableroDesdePlantilla(
                     nombrePlantilla,
                     email
             );
-
             handleCargarTableros();
         });
     }
+
+    /**
+     * @brief Gestiona el cierre controlado de la sesión de usuario activa.
+     * Purga los datos almacenados en memoria intermedia y revierte el escenario gráfico 
+     * a la vista de login original.
+     */
     @FXML
     public void handleCerrarSesion() {
-        // Esto vacía el currentUserEmail y nos devuelve a la pantalla inicial
         sceneManager.navigateToLogin();
     }
 }
