@@ -9,6 +9,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+/**
+ * @brief Entidad de persistencia JPA mapeada a la tabla relacional "TASK_LIST".
+ * Representa el estado en base de datos de las listas de tareas (columnas) del tablero,
+ * estableciendo una relación Many-to-One hacia su entidad BoardEntity contenedora.
+ */
 @Entity
 @Table(name = "TASK_LIST")
 public class TaskListEntity {
@@ -17,21 +22,30 @@ public class TaskListEntity {
     @Column(name = "ID", nullable = false)
     private String id;
 
-    @Column(name = "NOMBRE", nullable = false) // El nombre de la lista es obligatorio
+    @Column(name = "NOMBRE", nullable = false)
     private String nombre;
 
-    @Column(name = "MAX_CARDS", nullable = true) // Es true porque el límite de tarjetas puede ser opcional
+    @Column(name = "MAX_CARDS", nullable = true)
     private Integer maxCards;
 
-    @Column(name = "NUM_CARDS_ACTUAL", nullable = false) // El contador siempre debe tener un valor
+    @Column(name = "NUM_CARDS_ACTUAL", nullable = false)
     private int numCardsActual;
 
     @ManyToOne
     @JoinColumn(name = "BOARD_ID", nullable = false)
     private BoardEntity board;
 
+    /** @brief Constructor por defecto para JPA. */
     public TaskListEntity() {}
 
+    /**
+     * @brief Constructor con todos los campos relacionales.
+     * @param id Clave primaria.
+     * @param nombre Nombre de la columna.
+     * @param maxCards Capacidad máxima WIP (puede ser nulo).
+     * @param numCardsActual Contador en base de datos.
+     * @param board Entidad BoardEntity propietaria de la relación.
+     */
     public TaskListEntity(String id, String nombre, Integer maxCards, int numCardsActual, BoardEntity board) {
         this.id = id;
         this.nombre = nombre;
@@ -52,6 +66,7 @@ public class TaskListEntity {
     public BoardEntity getBoard() { return board; }
     public void setBoard(BoardEntity board) { this.board = board; }
 
+    /** @brief Compara por clave primaria la igualdad relacional de la lista. */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -60,6 +75,7 @@ public class TaskListEntity {
         return Objects.equals(id, other.id);
     }
 
+    /** @brief Genera el hash basándose en el identificador de persistencia. */
     @Override
     public int hashCode() {
         return Objects.hash(id);

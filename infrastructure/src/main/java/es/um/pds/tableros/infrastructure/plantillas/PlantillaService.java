@@ -15,17 +15,36 @@ import es.um.pds.tableros.domain.ports.input.board.commands.CrearBoardCommand;
 import es.um.pds.tableros.domain.ports.input.card.CardService;
 import es.um.pds.tableros.domain.ports.input.card.commands.CrearCardCommand;
 
+/**
+ * @brief Componente utilitario de infraestructura encargado de automatizar la creación de entornos.
+ * Lee archivos de texto `.yaml` situados bajo la ruta de recursos (`resources/plantillas/`)
+ * y simula secuencialmente la invocación de comandos de los casos de uso para generar tableros completos.
+ */
 @Component
 public class PlantillaService {
 
     private final BoardService boardService;
     private final CardService cardService;
 
+    /**
+     * @brief Constructor con inyección automática de los puertos de entrada correspondientes al dominio.
+     * @param boardService Servicio de aplicación encargado del control operacional de tableros.
+     * @param cardService Servicio de aplicación encargado del ciclo operacional de tarjetas.
+     */
     public PlantillaService(BoardService boardService, CardService cardService) {
         this.boardService = boardService;
         this.cardService = cardService;
     }
 
+    /**
+     * @brief Orquesta la lectura de una plantilla de disco y ejecuta el flujo completo de creación de datos.
+     * Carga el archivo mediante un `ClassPathResource`, realiza el parseo de datos estructurados con un 
+     * `ObjectMapper` parametrizado con `YAMLFactory` y realiza de manera ordenada la inserción lógica 
+     * del tablero raíz, sus listas locales y las subtareas estipuladas.
+     * @param nombreArchivoYaml Nombre físico con extensión del recurso de configuración (ej: "scrum.yaml").
+     * @param emailUsuario Dirección de correo electrónico del usuario solicitante que figurará como dueño.
+     * @throws RuntimeException Si ocurre un fallo de E/S leyendo el archivo o si se viola alguna invariante al procesar los comandos.
+     */
     public void crearTableroDesdePlantilla(String nombreArchivoYaml, String emailUsuario) {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         
@@ -42,7 +61,7 @@ public class PlantillaService {
             // 3. Crear las Listas y sus Tarjetas
             if (plantilla.getListas() != null) {
                 for (PlantillaYamlDTO.ListaYamlDTO lista : plantilla.getListas()) {
-                    // AÑADIDO: Pasamos emailUsuario al final
+                    // AÑADIDO: Pasamos emailUsuario al final para superar el control de seguridad de los casos de uso
                     AnadirListCommand anadirListaCmd = new AnadirListCommand(boardId, lista.getNombre(), null, emailUsuario);
                     String listId = boardService.anadirListaATablero(anadirListaCmd);
                     
@@ -53,11 +72,11 @@ public class PlantillaService {
                                 boardId, 
                                 listId, 
                                 tituloTarjeta, 
-                                "TASK", // Por defecto hacemos que sean tareas simples
+                                "TASK", // Por defecto hacemos que sean tarjetas simples (TASK)
                                 null,   // nombreEtiqueta
                                 null,   // colorEtiqueta
                                 null,   // checklistItems
-                                emailUsuario // AÑADIDO
+                                emailUsuario // AÑADIDO para el control de auditoría y permisos de escritura
                             );
                             cardService.crearNuevaTarjeta(crearCardCmd);
                         }

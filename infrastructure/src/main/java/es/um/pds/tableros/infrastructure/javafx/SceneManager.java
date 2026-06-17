@@ -11,6 +11,12 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+/**
+ * @brief Gestor centralizado de navegación y sesiones visuales en JavaFX.
+ * Se encarga de alternar las pantallas de la aplicación sobre el escenario principal,
+ * inyectando el contexto de Spring en los cargadores FXML para que los controladores visuales
+ * dispongan de inyección de dependencias automática.
+ */
 @Component
 public class SceneManager {
 
@@ -18,47 +24,62 @@ public class SceneManager {
     private Stage primaryStage;
     private String currentUserEmail;
 
-    // Inyectamos el contexto global de Spring para poder recuperar los Beans
+    /**
+     * @brief Construye el gestor inyectando el contexto global de Spring.
+     * @param springContext Contexto de aplicación para recuperar los Beans de los controladores.
+     */
     public SceneManager(ApplicationContext springContext) {
         this.springContext = springContext;
     }
     
+    /** @return Email del usuario que mantiene la sesión activa actual en la interfaz. */
     public String getCurrentUserEmail() {
         return currentUserEmail;
     }
 
+    /**
+     * @brief Establece el email del usuario logueado en la sesión gráfica actual.
+     * @param currentUserEmail Correo del usuario autenticado.
+     */
     public void setCurrentUserEmail(String currentUserEmail) {
         this.currentUserEmail = currentUserEmail;
     }
 
     /**
-     * Guarda la referencia de la ventana principal al arrancar.
+     * @brief Almacena la referencia de la ventana principal de visualización.
+     * @param stage Ventana física activa del sistema.
      */
     public void setPrimaryStage(Stage stage) {
         this.primaryStage = stage;
     }
+    
     /**
-     * Cambia la ventana a la pantalla de Login y limpia la sesión actual.
+     * @brief Redirecciona la interfaz a la pantalla de Login y purga los datos de sesión.
      */
     public void navigateToLogin() {
         this.currentUserEmail = null; // Limpiamos la sesión
         cambiarEscena("/fxml/Login.fxml", "Iniciar Sesión - Tableros Kanban");
     }
+    
     /**
-     * Cambia la ventana a la pantalla del Dashboard.
+     * @brief Redirecciona la interfaz hacia la pantalla principal del Dashboard de tableros.
      */
     public void navigateToDashboard() {
         cambiarEscena("/fxml/Dashboard.fxml", "Mis Tableros PCEO");
     }
 
     /**
-     * Cambia la ventana a un tablero específico pasándole su ID al controlador.
+     * @brief Redirecciona la interfaz hacia la vista detallada de un tablero Kanban específico.
+     * Extrae el controlador instanciado por Spring a través de la factoría de FXMLLoader para
+     * pasarle el ID del tablero antes de renderizar la escena.
+     * @param boardId Identificador único del tablero a inicializar y mostrar.
+     * @throws RuntimeException Si acontece un error de lectura de E/S al cargar el archivo FXML.
      */
     public void navigateToBoard(String boardId) {
         try {
             // 1. Configuramos el cargador FXML enlazado al contenedor de Spring
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/BoardView.fxml"));
-            loader.setControllerFactory(springContext::getBean); // <--- LA MAGIA: Spring crea el controlador
+            loader.setControllerFactory(springContext::getBean); // LA MAGIA: Spring crea el controlador
 
             Parent root = loader.load();
 
@@ -79,7 +100,11 @@ public class SceneManager {
     }
 
     /**
-     * Método auxiliar genérico para cargar escenas simples (como el Dashboard).
+     * @brief Método privado de utilidad para unificar la lógica de intercambio de escenas simples.
+     * Configura la factoría de controladores de Spring para procesar correctamente las dependencias.
+     * @param fxmlPath Ruta física del recurso .fxml dentro del directorio resources.
+     * @param titulo Título de ventana que recibirá el escenario tras la carga.
+     * @throws RuntimeException Si acontece un error crítico durante la carga de la vista FXML.
      */
     private void cambiarEscena(String fxmlPath, String titulo) {
         try {
@@ -94,7 +119,7 @@ public class SceneManager {
             primaryStage.centerOnScreen();
             primaryStage.show();
         } catch (IOException e) {
-        	//TODO Cambiar tipo de excepción
+            //TODO Cambiar tipo de excepción
             throw new RuntimeException("Error al cambiar de escena a " + fxmlPath, e);
         }
     }

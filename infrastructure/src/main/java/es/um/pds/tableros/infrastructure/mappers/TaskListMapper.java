@@ -7,12 +7,19 @@ import es.um.pds.tableros.domain.board.TaskList;
 import es.um.pds.tableros.infrastructure.persistence.jpa.entity.BoardEntity;
 import es.um.pds.tableros.infrastructure.persistence.jpa.entity.TaskListEntity;
 
+/**
+ * @brief Componente traductor (Mapper) para las entidades locales TaskList de columna.
+ * Mapea los objetos de negocio dependientes a estructuras de base de datos relacionales vinculadas a un tablero padre.
+ */
 @Component
 public class TaskListMapper {
 
     /**
-     * De objeto de dominio a entidad JPA.
-     * Necesita el BoardEntity ya existente para poder establecer la relación ManyToOne.
+     * @brief Traduce un elemento TaskList de dominio a una entidad TaskListEntity de persistencia relacional.
+     * Requiere pasar explícitamente la BoardEntity contenedora para mapear la clave foránea Many-to-One.
+     * @param taskList Instancia de negocio de la lista de tareas.
+     * @param boardEntity Entidad del tablero contenedor pre-calculada en infraestructura.
+     * @return El registro de persistencia configurado, o null si taskList es nulo.
      */
     public TaskListEntity toEntity(TaskList taskList, BoardEntity boardEntity) {
         if (taskList == null) return null;
@@ -26,8 +33,9 @@ public class TaskListMapper {
     }
 
     /**
-     * De entidad JPA a objeto de dominio.
-     * El BoardId no se necesita aquí porque TaskList solo conoce su propio ListId.
+     * @brief Reconstruye un objeto de negocio TaskList a partir de una TaskListEntity.
+     * @param entity El registro físico procedente de JPA.
+     * @return Una instancia del modelo de dominio de tipo TaskList.
      */
     public TaskList toModel(TaskListEntity entity) {
         if (entity == null) return null;
