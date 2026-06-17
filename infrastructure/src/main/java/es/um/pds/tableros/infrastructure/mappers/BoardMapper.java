@@ -15,16 +15,29 @@ import es.um.pds.tableros.infrastructure.persistence.jpa.entity.AutomationRuleEm
 import es.um.pds.tableros.infrastructure.persistence.jpa.entity.BoardEntity;
 import es.um.pds.tableros.infrastructure.persistence.jpa.entity.TaskListEntity;
 import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
+
+/**
+ * @brief Componente traductor (Mapper) para el Agregado Raíz Board.
+ * Centraliza la conversión bidireccional del tablero entre el modelo puro de dominio,
+ * los objetos de transferencia de datos de red (BoardDTO) para la API REST/JavaFX y las entidades relacionales de JPA (BoardEntity).
+ */
 @Component
 public class BoardMapper {
     private final TaskListMapper taskListMapper;
 
+    /**
+     * @brief Construye el mapper inyectando el traductor dependiente para las columnas.
+     * @param taskListMapper Instancia del mapper especializado en listas de tareas.
+     */
     public BoardMapper(TaskListMapper taskListMapper) {
         this.taskListMapper = taskListMapper;
     }
-	
+    
     /**
-     * Transforma del Modelo del Dominio al DTO (Para enviar hacia fuera en la API REST)
+     * @brief Transforma una instancia del modelo del dominio a un objeto BoardDTO.
+     * Aplica proyecciones planas sobre las colecciones y Value Objects para facilitar la serialización JSON.
+     * @param board Objeto de dominio con los datos del tablero.
+     * @return Instancia mapeada de BoardDTO, o null si el parámetro de entrada es nulo.
      */
     public BoardDTO toDTO(Board board) {
         if (board == null) {
@@ -37,13 +50,11 @@ public class BoardMapper {
         dto.setEmail(board.getEmail().value());
         dto.setLocked(board.isLocked());
         
-        // Mapeamos la lista de objetos de negocio TaskList a una lista simple de Strings con sus nombres
         List<BoardDTO.ListaDTO> listasListasDTO = board.getTasksLists().stream()
                 .map(tl -> new BoardDTO.ListaDTO(tl.getId().value(), tl.getNombre()))
                 .toList();
         dto.setListas(listasListasDTO);
 
-        // Si tiene asignada una lista de completadas, guardamos su ID plano
         if (board.getListCompletadas() != null) {
             dto.setListCompletadasId(board.getListCompletadas().value());
         }
@@ -71,35 +82,32 @@ public class BoardMapper {
     }
 
     /**
-     * Transforma del DTO al Modelo del Dominio (Para reconstruir el objeto si viniera del exterior)
-     * Nota: Como Board delega la creación de listas internamente, este método monta el agregado base.
+     * @brief Reconstruye la raíz del agregado de dominio Board a partir de un DTO externo.
+     * @param dto Objeto plano de transferencia de datos.
+     * @return Instancia parcial del agregado Board con sus propiedades inicializadas.
      */
     public Board toModel(BoardDTO dto) {
         if (dto == null) {
             return null;
         }
 
-        // Reconstruimos la Raíz del Agregado con su ID de dominio correspondiente
         BoardId boardId = new BoardId(dto.getId());
         Board board = new Board(boardId, dto.getTitulo(), new Email(dto.getEmail()));
 
-        // Recuperamos el estado de bloqueo original
         if (dto.isLocked()) {
             board.lock();
         } else {
             board.unlock();
         }
 
-        // Nota de diseño: Las columnas internas (TaskList) y la lista de completadas 
-        // habitualmente se recuperan o añaden de forma controlada a través de los servicios 
-        // consultando a la base de datos (JPA) para no perder los IDs reales de las listas, 
-        // pero estructuralmente el objeto raíz queda mapeado aquí.
-
         return board;
     }
     
     /**
-     * De objeto de dominio a entidad JPA.
+     * @brief Traduce una instancia de dominio Board a una entidad persistente BoardEntity de JPA.
+     * Gestiona las referencias cíclicas necesarias para que Hibernate mantenga las claves ajenas en H2.
+     * @param board Agregado completo de dominio.
+     * @return Instancia mapeada lista para ser almacenada a través del EntityManager o JpaRepository.
      */
     public BoardEntity toEntity(Board board) {
         if (board == null) return null;
@@ -108,7 +116,6 @@ public class BoardMapper {
                 ? board.getListCompletadas().value()
                 : null;
 
-        // Creamos primero la BoardEntity sin listas (para pasársela al TaskListMapper)
         BoardEntity boardEntity = new BoardEntity(
                 board.getId().value(),
                 board.getTitulo(),
@@ -119,13 +126,12 @@ public class BoardMapper {
                 new java.util.ArrayList<>(board.getHistorial()) 
             );
 
-        // Mapeamos cada TaskList pasándole la BoardEntity ya construida
         List<TaskListEntity> taskListEntities = board.getTasksLists().stream()
                 .map(tl -> taskListMapper.toEntity(tl, boardEntity))
                 .collect(Collectors.toList());
 
         boardEntity.setTasksLists(taskListEntities);
-     // Mapeamos los permisos del dominio (Map<Email, Rol>) a la entidad (Map<String, String>)
+        
         Map<String, String> permisosEntity = board.getPermisos().entrySet().stream()
                 .collect(Collectors.toMap(
                         e -> e.getKey().value(),
@@ -142,7 +148,10 @@ public class BoardMapper {
     }
 
     /**
-     * De entidad JPA a objeto de dominio (reconstrucción completa con listas).
+     * @brief Reconstruye el Agregado de Dominio Board de forma íntegra a partir de una entidad relacional BoardEntity.
+     * Recupera y rehidrata los estados de auditoría, las columnas internas, los mapas de permisos y las reglas automáticas.
+     * @param entity Registro persistente extraído de la base de datos H2.
+     * @return El Agregado Board con todas sus invariantes internas restauradas.
      */
     public Board toModel(BoardEntity entity) {
         if (entity == null) return null;
@@ -154,20 +163,17 @@ public class BoardMapper {
             board.lock();
         }
 
-        // Reconstruimos la lista de completadas si existe
         if (entity.getListCompletadasId() != null) {
             board.defineListCompletadas(new ListId(entity.getListCompletadasId()));
         }
         if (entity.getHistorial() != null) {
             board.restoreHistorial(entity.getHistorial());
         }
-        // Reconstruimos las TaskLists internas usando el TaskListMapper
         if (entity.getTasksLists() != null) {
             entity.getTasksLists().stream()
                   .map(taskListMapper::toModel)
                   .forEach(board::restoreTaskList);
         }
-     // Reconstruimos los permisos desde la entidad
         if (entity.getPermisos() != null) {
             entity.getPermisos().forEach((emailStr, rolStr) ->
                 board.restorePermiso(new Email(emailStr), Rol.valueOf(rolStr))
