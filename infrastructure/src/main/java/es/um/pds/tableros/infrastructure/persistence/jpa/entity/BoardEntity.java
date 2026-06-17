@@ -18,6 +18,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+
+/**
+ * @brief Entidad de persistencia JPA que mapea el estado del agregado Board en la tabla "BOARD" de H2.
+ * Almacena de forma unificada la información del tablero, sus relaciones One-to-Many con las columnas,
+ * y sus colecciones de elementos simples (historial, permisos y reglas automatizadas).
+ */
 @Entity
 @Table(name = "BOARD")
 public class BoardEntity {
@@ -58,8 +64,19 @@ public class BoardEntity {
     @CollectionTable(name = "BOARD_REGLAS", joinColumns = @JoinColumn(name = "BOARD_ID"))
     private List<AutomationRuleEmbeddable> reglas = new ArrayList<>();
     
+    /** @brief Constructor sin argumentos requerido por JPA. */
     public BoardEntity() {}
 
+    /**
+     * @brief Constructor parametrizado completo.
+     * @param id Clave primaria.
+     * @param titulo Título del tablero.
+     * @param email Correo del propietario.
+     * @param isLocked Flag de bloqueo.
+     * @param listCompletadasId ID de la lista done.
+     * @param tasksLists Colección de entidades TaskList.
+     * @param historial Colección de trazas de auditoría.
+     */
     public BoardEntity(String id, String titulo, String email, boolean isLocked, 
             String listCompletadasId, List<TaskListEntity> tasksLists, 
             List<String> historial) {
@@ -92,6 +109,7 @@ public class BoardEntity {
     public List<AutomationRuleEmbeddable> getReglas() { return reglas; }
     public void setReglas(List<AutomationRuleEmbeddable> reglas) { this.reglas = reglas; }
     
+    /** @brief Compara la igualdad basándose estrictamente en la identidad relacional (ID). */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -100,6 +118,7 @@ public class BoardEntity {
         return Objects.equals(id, other.id);
     }
 
+    /** @brief Genera el hash de consistencia a partir de la identidad de persistencia. */
     @Override
     public int hashCode() {
         return Objects.hash(id);
