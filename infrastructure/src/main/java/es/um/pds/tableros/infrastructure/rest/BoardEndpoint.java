@@ -7,13 +7,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid; // Asegúrate de tener este import
+import jakarta.validation.Valid;
 
 import es.um.pds.tableros.domain.ports.input.board.BoardService;
 import es.um.pds.tableros.domain.ports.input.board.commands.*;
 import es.um.pds.tableros.infrastructure.rest.dto.BoardDTO;
 import es.um.pds.tableros.infrastructure.mappers.BoardMapper; 
 
+/**
+ * @brief Adaptador de Entrada (Input Adapter) REST para la gestión  de tableros.
+ * Expone las APIs HTTP operativas mapeando peticiones web estructuradas hacia los comandos e 
+ * interfaces de consulta del puerto de entrada {@link BoardService}.
+ */
 @RestController
 @RequestMapping("/api/v1/tableros")
 public class BoardEndpoint {
@@ -23,15 +28,27 @@ public class BoardEndpoint {
     private final BoardService boardService;
     private final BoardMapper boardMapper;
 
+    /**
+     * @brief Constructor que inyecta el caso de uso del dominio y el traductor de datos.
+     * @param boardService Puerto de entrada para las reglas operativas de tableros.
+     * @param boardMapper Mapeador para aislar la estructura interna de dominio.
+     */
     public BoardEndpoint(BoardService boardService, BoardMapper boardMapper) {
         this.boardService = boardService;
         this.boardMapper = boardMapper;
     }
 
-    // 1. Obtener un tablero por ID
+    /**
+     * @brief Recupera la configuración detallada de un tablero Kanban por su ID único.
+     * Aplica un control explícito de lectura contrastando el header de sesión 
+     * con la lista de permisos internos reconstruidos del agregado.
+     * @param id Identificador de ruta del tablero deseado.
+     * @param emailUsuario Email del solicitante extraído de la cabecera 'X-User-Email'.
+     * @return ResponseEntity conteniendo el BoardDTO con estado 200 OK, 404 NOT FOUND si no existe, o 403 FORBIDDEN si carece de acceso.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<BoardDTO> getTablero(
-            @PathVariable("id") String id, // <--- AÑADIR ("id")
+            @PathVariable("id") String id, 
             @RequestHeader(value = "X-User-Email", required = false) String emailUsuario) {
         try {
             Optional<BoardDTO> dtoOpt = boardService.obtenerTableroPorId(id)
@@ -61,9 +78,13 @@ public class BoardEndpoint {
         }
     }
 
-    // 2. Crear un nuevo tablero
+    /**
+     * @brief Da de alta un nuevo tablero Kanban en el sistema.
+     * @param dto Datos JSON de entrada con el formato de inicialización del tablero.
+     * @return ResponseEntity con el BoardDTO resultante y estado 201 Created, o 400 Bad Request si el formato es inválido.
+     */
     @PostMapping
-    public ResponseEntity<BoardDTO> createTablero(@Valid @RequestBody BoardDTO dto) { // <--- AÑADIR @Valid
+    public ResponseEntity<BoardDTO> createTablero(@Valid @RequestBody BoardDTO dto) { 
         log.info("Petición para crear tablero '{}'", dto.getTitulo());
         
         if (dto.getId() != null) {
@@ -79,12 +100,18 @@ public class BoardEndpoint {
         }
     }
 
-    // 3. Añadir una lista/columna al tablero
+    /**
+     * @brief Añade una nueva lista (columna de tareas) al tablero especificado.
+     * @param id Identificador de ruta del tablero contenedor.
+     * @param emailUsuario Email del solicitante para auditoría y verificación de permisos de escritura.
+     * @param payload Objeto JSON con los parámetros de la nueva columna (nombre y límite).
+     * @return ResponseEntity con estado 200 OK, 403 FORBIDDEN si no tiene permisos, o 400 BAD REQUEST ante anomalías.
+     */
     @PostMapping("/{id}/listas")
     public ResponseEntity<Void> anadirLista(
-            @PathVariable("id") String id, // <--- AÑADIR ("id")
+            @PathVariable("id") String id, 
             @RequestHeader(value = "X-User-Email", required = false) String emailUsuario,
-            @Valid @RequestBody AnadirListCommandPayload payload) { // <--- AÑADIR @Valid
+            @Valid @RequestBody AnadirListCommandPayload payload) { 
         try {
             AnadirListCommand cmd = new AnadirListCommand(id, payload.nombreLista(), payload.maxCards(), emailUsuario);
             boardService.anadirListaATablero(cmd);
@@ -97,12 +124,18 @@ public class BoardEndpoint {
         }
     }
 
-    // 4. Cambiar estado de bloqueo
+    /**
+     * @brief Modifica el estado de bloqueo temporal sobre un tablero operativo.
+     * @param id Identificador del tablero objetivo.
+     * @param emailUsuario Dirección de correo electrónico de quien emite la instrucción.
+     * @param bloquear Parámetro de consulta booleano (true para bloquear, false para reanudar).
+     * @return ResponseEntity con estado 200 OK, 403 o 400 según las reglas de negocio interceptadas.
+     */
     @PutMapping("/{id}/bloqueo")
     public ResponseEntity<Void> cambiarBloqueo(
-            @PathVariable("id") String id, // <--- AÑADIR ("id")
+            @PathVariable("id") String id, 
             @RequestHeader(value = "X-User-Email", required = false) String emailUsuario,
-            @RequestParam("bloquear") boolean bloquear) { // <--- AÑADIR ("bloquear") por precaución
+            @RequestParam("bloquear") boolean bloquear) { 
         try {
             CambiarBloqueoBoardCommand cmd = new CambiarBloqueoBoardCommand(id, bloquear, emailUsuario);
             boardService.cambiarEstadoBloqueo(cmd);
@@ -115,12 +148,18 @@ public class BoardEndpoint {
         }
     }
 
-    // 5. Compartir con alguien
+    /**
+     * @brief Concede permisos de acceso (READ o WRITE) a un usuario invitado.
+     * @param id Identificador del tablero.
+     * @param emailSolicitante Cabecera HTTP que identifica al dueño exclusivo autorizado para realizar la acción.
+     * @param payload JSON con los metadatos de la invitación (email invitado y nivel de rol).
+     * @return ResponseEntity con estado 200 OK en flujo de éxito.
+     */
     @PostMapping("/{id}/permisos")
     public ResponseEntity<Void> compartirTablero(
-            @PathVariable("id") String id, // <--- AÑADIR ("id")
+            @PathVariable("id") String id, 
             @RequestHeader("X-User-Email") String emailSolicitante,
-            @Valid @RequestBody PermisosPayload payload) { // <--- AÑADIR @Valid
+            @Valid @RequestBody PermisosPayload payload) { 
         try {
             CompartirBoardCommand cmd = new CompartirBoardCommand(
                     id, emailSolicitante, payload.emailInvitado(), payload.rol());
@@ -134,11 +173,17 @@ public class BoardEndpoint {
         }
     }
 
-    // 6. Revocar acceso
+    /**
+     * @brief Revoca permanentemente los permisos de visualización o edición a un usuario colaborador.
+     * @param id Identificador del tablero.
+     * @param emailAEliminar Dirección de correo del invitado al que se le retiran las credenciales.
+     * @param emailSolicitante Cabecera de control que valida que la petición provenga del dueño.
+     * @return ResponseEntity con estado 200 OK o errores controlados por excepciones de aplicación.
+     */
     @DeleteMapping("/{id}/permisos/{emailAEliminar}")
     public ResponseEntity<Void> revocarAcceso(
-            @PathVariable("id") String id, // <--- AÑADIR ("id")
-            @PathVariable("emailAEliminar") String emailAEliminar, // <--- AÑADIR ("emailAEliminar")
+            @PathVariable("id") String id, 
+            @PathVariable("emailAEliminar") String emailAEliminar, 
             @RequestHeader("X-User-Email") String emailSolicitante) {
         try {
             boardService.revocarAcceso(id, emailSolicitante, emailAEliminar);
@@ -151,7 +196,17 @@ public class BoardEndpoint {
         }
     }
 
-    // Records auxiliares
+    /**
+     * @brief Record auxiliar (Payload DTO) para estructurar el JSON de concesión de permisos.
+     * @param emailInvitado Dirección de correo electrónico a añadir.
+     * @param rol Cadena representativa ("READ" o "WRITE").
+     */
     public record PermisosPayload(String emailInvitado, String rol) {}
+    
+    /**
+     * @brief Record auxiliar (Payload DTO) para estructurar el JSON de creación de columnas.
+     * @param nombreLista Título de la columna.
+     * @param maxCards Limite de tarjetas concurrentes toleradas.
+     */
     public record AnadirListCommandPayload(String nombreLista, Integer maxCards) {}
 }

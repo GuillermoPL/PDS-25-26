@@ -18,8 +18,13 @@ import es.um.pds.tableros.domain.ports.input.card.commands.CrearCardCommand;
 import es.um.pds.tableros.domain.ports.input.card.commands.MoverCardCommand;
 import es.um.pds.tableros.infrastructure.mappers.CardMapper;
 import es.um.pds.tableros.infrastructure.rest.dto.CardDTO;
-import jakarta.validation.Valid; // Asegúrate de tener este import
+import jakarta.validation.Valid;
 
+/**
+ * @brief Adaptador de Entrada (Input Adapter) REST enfocado a operaciones sobre tarjetas.
+ * Proporciona los endpoints públicos necesarios para la obtención, inserción 
+ * y traslados de tareas de la aplicación consumiendo el puerto {@link CardService}.
+ */
 @RestController
 @RequestMapping("/api/v1/tarjetas")
 public class CardEndpoint {
@@ -29,23 +34,40 @@ public class CardEndpoint {
     private final CardService cardService;
     private final CardMapper cardMapper;
 
+    /**
+     * @brief Constructor con inyección automática de dependencias de la subcapa operativa de tarjetas.
+     * @param cardService Puerto de entrada para la lógica de casos de uso de tarjetas.
+     * @param cardMapper Mapeador para aislar tipos primitivos de objetos de dominio.
+     */
     public CardEndpoint(CardService cardService, CardMapper cardMapper) {
         this.cardService = cardService;
         this.cardMapper = cardMapper;
     }
 
+    /**
+     * @brief Consulta el estado actual de una tarjeta (tarea o checklist) mediante su ID.
+     * @param id Identificador de ruta de la tarjeta buscada.
+     * @return ResponseEntity con el CardDTO (200 OK) o un código de estado 404 NOT FOUND si es inexistente.
+     */
     @GetMapping("/{id}")
-    public ResponseEntity<CardDTO> getTarjeta(@PathVariable("id") String id) { // <--- AÑADIR ("id")
+    public ResponseEntity<CardDTO> getTarjeta(@PathVariable("id") String id) { 
         log.info("Buscando tarjeta con ID: {}", id);
         return cardService.obtenerTarjetaPorId(id)
                    .map(c -> ResponseEntity.ok(cardMapper.toDTO(c)))
                    .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
+    /**
+     * @brief Crea una nueva tarjeta bajo las condiciones de validación del comando del dominio.
+     * Procesa la primera posición de etiquetas si vinieran especificadas de forma plana y delega.
+     * @param emailUsuario Cabecera con el correo electrónico del autor de la petición (permisos de escritura).
+     * @param dto JSON de entrada con la estructura completa de metadatos de la tarjeta.
+     * @return ResponseEntity con el CardDTO serializado (201 CREATED) o estados de fallo 403 o 400.
+     */
     @PostMapping
     public ResponseEntity<CardDTO> createTarjeta(
             @RequestHeader(value = "X-User-Email", required = false) String emailUsuario, 
-            @Valid @RequestBody CardDTO dto) { // <--- AÑADIR @Valid
+            @Valid @RequestBody CardDTO dto) { 
             
         log.info("Petición para crear tarjeta '{}' en la lista {}", dto.getTitulo(), dto.getListIdActual());
         
@@ -78,11 +100,19 @@ public class CardEndpoint {
         }
     }
 
+    /**
+     * @brief Ejecuta el traslado de una tarjeta hacia una columna de destino.
+     * Invoca de fondo al servicio de dominio encargado de sincronizar contadores y evaluar límites WIP.
+     * @param id Identificador de la tarjeta que va a cambiar de ubicación.
+     * @param emailUsuario Correo electrónico del operador que ejecuta el traslado.
+     * @param payload JSON con los identificadores complementarios necesarios (boardId y targetListId).
+     * @return ResponseEntity con estado 200 OK ante un movimiento exitoso o errores mapeados.
+     */
     @PutMapping("/{id}/movimiento")
     public ResponseEntity<Void> moverTarjeta(
-            @PathVariable("id") String id, // <--- AÑADIR ("id")
+            @PathVariable("id") String id, 
             @RequestHeader(value = "X-User-Email", required = false) String emailUsuario,
-            @Valid @RequestBody MoverTarjetaPayload payload) { // <--- AÑADIR @Valid
+            @Valid @RequestBody MoverTarjetaPayload payload) { 
             
         log.info("Petición para mover la tarjeta {} a la lista {}", id, payload.targetListId());
 
@@ -99,5 +129,10 @@ public class CardEndpoint {
         }
     }
 
+    /**
+     * @brief Record auxiliar (Payload DTO) empleado para estructurar el cuerpo JSON de traslados.
+     * @param boardId Identificador único del tablero Kanban.
+     * @param targetListId Identificador único de la columna de destino.
+     */
     public record MoverTarjetaPayload(String boardId, String targetListId) {}
 }
