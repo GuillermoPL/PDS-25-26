@@ -24,6 +24,9 @@ public class AnadirListaController {
 
     /** Campo de texto FXML para introducir el nombre de la nueva columna. */
     @FXML private TextField txtNombreLista;
+    
+    /** Campo de texto FXML opcional para definir el límite WIP máximo de tarjetas de la columna. */
+    @FXML private TextField txtLimiteTarjetas;
 
     private String boardId;
 
@@ -50,12 +53,14 @@ public class AnadirListaController {
 
     /**
      * @brief Maneja la acción FXML de pulsación del botón Crear.
-     * Extrae y valida el texto del campo, construye el comando AnadirListCommand adjuntando 
-     * el email en sesión y delega en la capa de aplicación cerrando la ventana en caso de éxito.
+     * Extrae y valida el texto del campo, parsea el límite WIP si está presente, construye 
+     * el comando AnadirListCommand adjuntando el email en sesión y delega en la capa de aplicación 
+     * cerrando la ventana en caso de éxito.
      */
     @FXML
     public void handleCrear() {
         String nombre = txtNombreLista.getText().trim();
+        String limiteStr = txtLimiteTarjetas != null ? txtLimiteTarjetas.getText().trim() : "";
 
         if (nombre.isBlank()) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -66,9 +71,24 @@ public class AnadirListaController {
             return;
         }
 
+        Integer limiteWip = null;
+        if (!limiteStr.isBlank()) {
+            try {
+                limiteWip = Integer.parseInt(limiteStr);
+                if (limiteWip <= 0) throw new NumberFormatException();
+            } catch (NumberFormatException e) {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Formato inválido");
+                alert.setHeaderText(null);
+                alert.setContentText("El límite de tarjetas debe ser un número entero mayor que 0.");
+                alert.showAndWait();
+                return;
+            }
+        }
+
         try {
-            String emailUsuario = sceneManager.getCurrentUserEmail(); // AÑADIDO
-            AnadirListCommand cmd = new AnadirListCommand(boardId, nombre, null, emailUsuario); // AÑADIDO el 4º parámetro
+            String emailUsuario = sceneManager.getCurrentUserEmail(); 
+            AnadirListCommand cmd = new AnadirListCommand(boardId, nombre, limiteWip, emailUsuario); 
             boardService.anadirListaATablero(cmd);
             cerrarVentana();
         } catch (Exception e) {

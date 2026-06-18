@@ -7,11 +7,6 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<!--
-    Diálogo para añadir una nueva lista (columna) al tablero actual.
-    Se abre como Stage modal desde BoardViewController.handleAnadirListaVentana().
-    El controlador es AnadirListaController, gestionado por Spring.
--->
 <VBox alignment="CENTER" spacing="15.0" prefWidth="350.0"
       xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
@@ -25,6 +20,8 @@
     </Label>
 
     <TextField fx:id="txtNombreLista" promptText="Nombre de la lista (ej: TODO, DOING...)"/>
+    
+    <TextField fx:id="txtLimiteTarjetas" promptText="Límite máximo de tarjetas (opcional)"/>
 
     <HBox spacing="10.0" alignment="CENTER_RIGHT">
         <Button text="Cancelar" onAction="#handleCancelar"
