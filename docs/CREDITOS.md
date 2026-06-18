@@ -21,11 +21,17 @@ Este documento detalla la contribución de cada miembro del equipo al proyecto.
 **🏗️ Persistencia y Testing**
 * Creación de las entidades JPA para mapear la información a la base de datos y definición de los puertos de salida.
 * Implementación de pruebas automatizadas (unitarias y de integración) para el Dominio, los Servicios de Aplicación, los Endpoints y las validaciones de la Arquitectura Hexagonal.
+* Desarrollo de los tests restantes de los Servicios de Aplicación, incluyendo las pruebas de seguridad y lógica de negocio para la edición de tableros.
 
 **✨ Funcionalidades de la App y Extra Opcional**
 * Desarrollo visual y lógico de las tarjetas tipo `CHECKLIST` y la funcionalidad de la lista de tareas "Completadas" (con soporte en el historial).
 * Implementación de mejoras de navegación en la interfaz (botón para volver al Dashboard).
 * Desarrollo del servicio de **Compactación automática de tableros**.
+* Implementación de la funcionalidad para editar el título de los tableros con validación de permisos.
+* Modificación de la lógica visual y de comandos para permitir añadir límites de tarjetas en la creación de listas.
+
+**📚 Documentación**
+* Redacción completa del Manual de Usuario (incluyendo capturas de pantalla), Historias de Usuario y el Documento de Decisiones de Diseño Técnico.
 
 ---
 
@@ -37,6 +43,8 @@ Este documento detalla la contribución de cada miembro del equipo al proyecto.
 * **Persistencia:** *Implemento las clases Entity para la persistencia JPA* (Junio 9)
 * **Testing:** *Añado tests para el dominio* / *Implemento las pruebas de la arquitectura del proyecto* (Junio 9 - 13)
 * **UI y Opcionales:** *Corrijo la UI para añadir pasos en CHECKLIST* / *Añado lista completadas* / *Añado servicio de Compactación* (Junio 10 - 12)
+* **Nuevas Funcionalidades y Tests:** *Añado funcionalidad para editar título de un tablero* / *Implemento la funcionalidad para que se pueda añadir un límite de tarjetas al crear una lista de tareas* / *Añado dos funciones al test del servicio de aplicacion del tablero* (Junio 18)
+* **Documentación:** *Add manual de usuario e imágenes* / *Update historias-de-usuario.md* (Junio 18)
 
 **🔀 Pull Requests (PRs) Integrados**
 
@@ -46,6 +54,8 @@ Este documento detalla la contribución de cada miembro del equipo al proyecto.
 | **Arquitectura y JPA** | PR #18, #22 | Entidades de persistencia y configuración de dependencias. |
 | **Testing Automatizado** | PR #26 a #31, #83, #88 | Pruebas de Dominio, Aplicación, Endpoints y Arquitectura. |
 | **Interfaz y Opcionales** | PR #53, #54, #56, #63, #64, #65 | UI de Checklists, lista de completadas, historiales y servicio de Compactación automática. |
+| **Mejoras UI y Lógica** | PR #91, #92, #93 | Inserción de límites WIP, edición de títulos de tablero y tests unitarios asociados. |
+| **Documentación y Refactor** | PR #89, #90 | Reestructuración de paquetes, Manual de Usuario y Documentación técnica. |
 
 ### Juan Paredes Pardines
 * **Tareas:** ...
