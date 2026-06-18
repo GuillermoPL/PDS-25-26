@@ -38,7 +38,7 @@ Una vez dentro de un tablero, encontrarás una barra superior de herramientas.
 
 * **Editar Título:** Haz clic en el icono del lápiz (✏️) situado junto al nombre actual de tu tablero. Aparecerá una ventana emergente donde podrás escribir el nuevo nombre y guardarlo pulsando **Aceptar**.
 
-![Edición del título del tablero](./Images/Editar_titulo.png)
+![Edición del título del tablero](./Images/Renombrar_titulo.png)
 
 * **Compartir y Dar Permisos:** Invita a otros usuarios a colaborar pulsando en **Compartir**. Introduce su correo y asígnales permisos de Lectura (`READ`) o Escritura (`WRITE`). 
 
