@@ -36,6 +36,10 @@ Una vez dentro de un tablero, encontrarás una barra superior de herramientas.
 
 * **Volver a Mis Tableros:** Este botón en la esquina superior izquierda te permite regresar al menú principal en cualquier momento.
 
+* **Editar Título:** Haz clic en el icono del lápiz (✏️) situado junto al nombre actual de tu tablero. Aparecerá una ventana emergente donde podrás escribir el nuevo nombre y guardarlo pulsando **Aceptar**.
+
+![Edición del título del tablero](./Images/Editar_titulo.png)
+
 * **Compartir y Dar Permisos:** Invita a otros usuarios a colaborar pulsando en **Compartir**. Introduce su correo y asígnales permisos de Lectura (`READ`) o Escritura (`WRITE`). 
 
 ![Menú para compartir tablero](./Images/Compartir.png)
