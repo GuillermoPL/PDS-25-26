@@ -1,4 +1,4 @@
-package es.um.pds.tableros.infrastructure;
+package es.um.pds.tableros.infrastructure.compactacion;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
