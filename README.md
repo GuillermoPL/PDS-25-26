@@ -80,7 +80,7 @@ El repositorio refleja la separación lógica de las capas arquitectónicas para
 
 ## 📚 Documentación Obligatoria y Enlaces de Interés
 
-* [**Créditos y Participación (`CREDITOS.md`)**](./docs/CREDITOS.md): Detalle de la contribución de cada miembro del equipo y referencias a *Commits*/*Pull Requests*.
+* [**Créditos y Participación**](./docs/CREDITOS.md): Detalle de la contribución de cada miembro del equipo y referencias a *Commits*/*Pull Requests*.
 * [**Historias de Usuario**](./docs/historias-de-usuario.md): Definición de los requisitos funcionales iniciales del sistema.
 * [**Documentación de Diseño**](./docs/DOCUMENTACION.md): Documento ampliado con diagramas y decisiones arquitectónicas detalladas.
 * [**Manual de Usuario**](./docs/manual-de-usuario.md): Manual de usuario para explicar el funcionamiento de la aplicación.
