@@ -47,7 +47,7 @@ Una vez dentro de un tablero, encontrarás una barra superior de herramientas.
 El trabajo se organiza en columnas verticales llamadas Listas.
 
 ### Añadir Listas
-Haz clic en **+ Añadir Lista** en la esquina superior derecha y asígnale un nombre para crear una nueva fase en tu flujo de trabajo.
+Haz clic en **+ Añadir Lista** en la esquina superior derecha y asígnale un nombre y un límite de tarjetas para crear una nueva fase en tu flujo de trabajo.
 
 ![Creación de una nueva lista](./Images/Pantalla_crear_lista.png)
 
