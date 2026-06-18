@@ -12,8 +12,40 @@ Este documento detalla la contribución de cada miembro del equipo al proyecto.
 ## Detalle de contribuciones
 
 ### Jorge Torralba Santa Cruz
-* **Tareas:**
-* **Evidencias:** 
+### 🛠️ Tareas Realizadas
+
+**🎯 Modelado del Dominio y Servicios**
+* Diseño e implementación de la capa de dominio siguiendo DDD (entidades principales, Value Objects y reglas de negocio).
+* Desarrollo del servicio de dominio para el movimiento de tarjetas y los servicios de aplicación encargados de coordinar los casos de uso principales.
+
+**🏗️ Persistencia y Testing**
+* Creación de las entidades JPA para mapear la información a la base de datos y definición de los puertos de salida.
+* Implementación de pruebas automatizadas (unitarias y de integración) para el Dominio, los Servicios de Aplicación, los Endpoints y las validaciones de la Arquitectura Hexagonal.
+
+**✨ Funcionalidades de la App y Extra Opcional**
+* Desarrollo visual y lógico de las tarjetas tipo `CHECKLIST` y la funcionalidad de la lista de tareas "Completadas" (con soporte en el historial).
+* Implementación de mejoras de navegación en la interfaz (botón para volver al Dashboard).
+* Desarrollo del servicio de **Compactación automática de tableros**.
+
+---
+
+### 📂 Evidencias de Trabajo
+
+**📌 Ejemplos de Commits en Rama Principal**
+
+* **Dominio y Servicios:** *Añado la entidad TaskList* / *Implemento la clase Board* / *Implemento el servicio de movimiento de tarjetas* (Junio 4 - 8)
+* **Persistencia:** *Implemento las clases Entity para la persistencia JPA* (Junio 9)
+* **Testing:** *Añado tests para el dominio* / *Implemento las pruebas de la arquitectura del proyecto* (Junio 9 - 13)
+* **UI y Opcionales:** *Corrijo la UI para añadir pasos en CHECKLIST* / *Añado lista completadas* / *Añado servicio de Compactación* (Junio 10 - 12)
+
+**🔀 Pull Requests (PRs) Integrados**
+
+| Bloque Funcional | Pull Requests | Descripción Resumida |
+| :--- | :--- | :--- |
+| **Dominio y Core** | PR #2 a #10, #14, #15, #17 | Entidades, Value Objects y servicio de dominio principal. |
+| **Arquitectura y JPA** | PR #18, #22 | Entidades de persistencia y configuración de dependencias. |
+| **Testing Automatizado** | PR #26 a #31, #83, #88 | Pruebas de Dominio, Aplicación, Endpoints y Arquitectura. |
+| **Interfaz y Opcionales** | PR #53, #54, #56, #63, #64, #65 | UI de Checklists, lista de completadas, historiales y servicio de Compactación automática. |
 
 ### Juan Paredes Pardines
 * **Tareas:** ...
