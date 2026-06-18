@@ -10,6 +10,7 @@ import es.um.pds.tableros.domain.ports.input.board.commands.CompartirBoardComman
 import es.um.pds.tableros.domain.ports.input.board.commands.CrearBoardCommand;
 import es.um.pds.tableros.domain.ports.input.board.commands.CrearReglaCommand;
 import es.um.pds.tableros.domain.ports.input.board.commands.DefinirListCompletadasCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.RenombrarBoardCommand;
 
 /**
  * @brief Puerto de Entrada (Input Port) que expone los casos de uso de gestión de tableros.
@@ -82,4 +83,10 @@ public interface BoardService {
      * @param cmd Comando con la estructura completa de disparo y acción de la regla.
      */
     void anadirReglaAutomatizacion(CrearReglaCommand cmd);
+    
+    /**
+     * @brief Caso de uso para modificar el título de un tablero existente.
+     * @param cmd Objeto de comando que contiene el ID del tablero, el nuevo título y el usuario solicitante.
+     */
+    void renombrarTablero(RenombrarBoardCommand cmd);
 }

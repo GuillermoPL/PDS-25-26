@@ -305,6 +305,21 @@ public class Board {
     }
     
     /**
+     * @brief Modifica el título principal del tablero.
+     * * Método de dominio encargado de aplicar la mutación de estado. 
+     * Actúa como barrera de protección de las invariantes del agregado, garantizando 
+     * que el tablero nunca se quede con un título nulo o compuesto únicamente por espacios en blanco.
+     * * @param nuevoTitulo El nuevo texto descriptivo para el tablero.
+     * @throws IllegalArgumentException Si el parámetro proporcionado es nulo o está vacío.
+     */
+    public void modificarTitulo(String nuevoTitulo) {
+        if (nuevoTitulo == null || nuevoTitulo.trim().isEmpty()) {
+            throw new IllegalArgumentException("El título no puede estar vacío");
+        }
+        this.titulo = nuevoTitulo;
+    }
+    
+    /**
      * @brief Compara la identidad de dos tableros.
      * @note La igualdad de los Agregados se basa única y exclusivamente en su identidad (BoardId).
      */
