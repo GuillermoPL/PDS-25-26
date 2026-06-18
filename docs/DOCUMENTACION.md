@@ -46,3 +46,14 @@ Hemos diseñado mecanismos para que el sistema trabaje de forma autónoma sin de
 
 * **Creación Segura desde Plantillas:** Cuando la aplicación lee un archivo de plantilla para generar un tablero, no "hace trampas" inyectando los datos directamente en la base de datos. En su lugar, el sistema reutiliza las mismas funciones que usaría una persona normal. Esto garantiza que un tablero generado automáticamente cumple con las mismas reglas, permisos y límites que uno creado a mano.
 * **Mantenimiento Invisible (Compactación):** Para mantener los tableros limpios de tareas antiguas, configuramos un proceso autónomo guiado por el reloj del sistema operativo mediante la anotación `@Scheduled` de Spring. Este mecanismo actúa como un disparador que despierta periódicamente la tarea de limpieza en segundo plano, manteniendo el orden sin interrumpir ni ralentizar la experiencia del usuario.
+
+---
+
+
+* ## 6. Validación Continua de la Arquitectura (ArchUnit)
+Para garantizar que las reglas de la Arquitectura Hexagonal y el Diseño Orientado al Dominio (DDD) no se corrompan a medida que el proyecto crece, hemos implementado una suite de pruebas estáticas utilizando la librería **ArchUnit**.
+
+* **Protección del Hexágono:** Los tests verifican mediante el análisis del *bytecode* que la capa de Dominio jamás importe clases de Infraestructura o de Spring, forzando a que la Inversión de Dependencias se mantenga intacta.
+* **Métricas:** Hemos automatizado el cálculo de las métricas de acoplamiento. Los resultados demuestran el éxito de la arquitectura:
+  * **Dominio (Inestabilidad = 0.00):** Es un componente totalmente "Estable". Las demás capas dependen de él, pero él no depende de nadie. Sus reglas están blindadas.
+  * **Infraestructura (Inestabilidad = 1.00):** Es un componente totalmente "Inestable" (Flexible). Absolutamente ninguna otra capa de la aplicación depende de ella. Esto garantiza que la tecnología es un simple detalle y que elementos como la base de datos (H2) o la interfaz gráfica (JavaFX) pueden ser intercambiados en el futuro sin romper el sistema.
