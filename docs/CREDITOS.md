@@ -58,8 +58,32 @@ Este documento detalla la contribución de cada miembro del equipo al proyecto.
 | **Documentación y Refactor** | PR #89, #90 | Reestructuración de paquetes, Manual de Usuario y Documentación técnica. |
 
 ### Juan Paredes Pardines
-* **Tareas:** ...
-* **Evidencias:** ...
+## 🛠️ Tareas Realizadas
+
+### 🏗️ Modelado del Dominio y Puertos de Salida
+* **Descripción:** Definición y diseño de los contratos del dominio (puertos de salida), estableciendo las interfaces fundamentales de persistencia `BoardRepository` y `CardRepository` dentro del módulo *domain*, garantizando el desacoplamiento total respecto a los frameworks de infraestructura.
+
+### ⚙️ Lógica de Aplicación y Casos de Uso Iniciales
+* **Descripción:** Desarrollo e implementación de la primera fase de los servicios de aplicación centrales (`BoardServiceImpl` y `CardServiceImpl`). Orquestación de los flujos de negocio fundamentales para la creación y consulta de tableros, columnas y gestión inicial de tarjetas previa a la adición de módulos de seguridad avanzados.
+
+### 🌐 Diseño de APIs y Controladores REST
+* **Descripción:** Co-diseño, primeras implementaciones y análisis estructural de los endpoints HTTP orientados a la API REST de tableros (`BoardEndpoint`) y tarjetas (`CardEndpoint`), asegurando la correcta exposición de recursos y la comunicación limpia con los puertos de entrada.
+
+### 📄 Documentación Técnica del Sistema
+* **Descripción:** Redacción y estructuración exhaustiva de la documentación técnica interna de la aplicación, incluyendo la generación de comentarios enriquecidos bajo el estándar Doxygen en múltiples capas del sistema (agregados, servicios y adaptadores) para asegurar la mantenibilidad del software.
+
+---
+
+## 📂 Evidencias de Trabajo
+
+### 🔀 Pull Requests (PRs) Integrados
+
+| Bloque Funcional | Pull Requests | Descripción / Cobertura |
+| :--- | :--- | :--- |
+| **Dominio y Puertos** | `PR #11`, `PR #12` | Definición de las interfaces de los puertos de entrada (`BoardService`, `CardService`) y puertos de salida (`BoardRepository`, `CardRepository`) en el modelo de dominio. |
+| **Servicios de Aplicación** | `PR #13`, `PR #20` | Desarrollo e implementación de la primera fase de los servicios de aplicación centrales (`CardServiceImpl` y `BoardServiceImpl`) para la orquestación de casos de uso. |
+| **Diseño REST e Interfaces** | `PR #21`, `PR #32` | Primeras versiones y estructuración de los endpoints controladores REST (`BoardEndpoint` y `CardEndpoint`) y acoplamiento inicial de las vistas. |
+| **Documentación Doxygen** | `PR #84`, `PR #85`, `PR #86`, `PR #87` | Puesta a punto y generación exhaustiva de la documentación en comentarios técnicos de las capas de dominio, aplicación e infraestructura bajo el estándar Doxygen. |
 
 ### Guillermo Fulgencio Parra López
 
