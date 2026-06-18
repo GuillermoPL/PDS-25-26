@@ -23,6 +23,7 @@ import es.um.pds.tableros.domain.board.BoardId;
 import es.um.pds.tableros.domain.board.Email;
 import es.um.pds.tableros.domain.ports.input.board.commands.AnadirListCommand;
 import es.um.pds.tableros.domain.ports.input.board.commands.CrearBoardCommand;
+import es.um.pds.tableros.domain.ports.input.board.commands.RenombrarBoardCommand;
 import es.um.pds.tableros.domain.ports.output.BoardRepository;
 
 /**
@@ -103,6 +104,51 @@ class BoardServiceImplTest {
         
         assertEquals("El tablero especificado no existe", exception.getMessage());
         // Verificamos que JAMÁS se intentó guardar nada
+        verify(boardRepository, never()).save(any());
+    }
+    
+    /**
+     * @brief Verifica el caso de éxito al renombrar un tablero.
+     * Comprueba que si el usuario es el propietario, el título se actualiza
+     * y se guardan los cambios en el repositorio.
+     */
+    @Test
+    void testRenombrarTableroExitoComoDueno() {
+        // 1. Preparamos el mock con el título original
+        Board boardSimulado = new Board(new BoardId("b1"), "Título Viejo", new Email("dueno@um.es"));
+        when(boardRepository.findById(new BoardId("b1"))).thenReturn(Optional.of(boardSimulado));
+
+        // 2. Ejecutamos el comando simulando ser el dueño
+        RenombrarBoardCommand cmd = new RenombrarBoardCommand("b1", "Título Nuevo", "dueno@um.es");
+        boardService.renombrarTablero(cmd);
+
+        // 3. Verificamos que el título cambió y se llamó a guardar
+        assertEquals("Título Nuevo", boardSimulado.getTitulo());
+        verify(boardRepository, times(1)).save(boardSimulado);
+    }
+
+    /**
+     * @brief Valida la seguridad del caso de uso renombrar tablero.
+     * Garantiza que si un intruso (sin permisos) intenta cambiar el nombre,
+     * el sistema lanza una excepción y no guarda nada en la base de datos.
+     */
+    @Test
+    void testRenombrarTableroLanzaExcepcionSiNoTienePermisos() {
+        // 1. Preparamos el mock
+        Board boardSimulado = new Board(new BoardId("b1"), "Título Viejo", new Email("dueno@um.es"));
+        when(boardRepository.findById(new BoardId("b1"))).thenReturn(Optional.of(boardSimulado));
+
+        // 2. Ejecutamos el comando simulando ser un usuario que NO es el dueño ni tiene permisos
+        RenombrarBoardCommand cmd = new RenombrarBoardCommand("b1", "Título Hackeado", "intruso@um.es");
+
+        // 3. Verificamos que salta la excepción de seguridad
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+            boardService.renombrarTablero(cmd);
+        });
+
+        // 4. Comprobamos que el mensaje es correcto y que NUNCA se guardó el tablero modificado
+        assertEquals("Solo los usuarios con permiso de escritura pueden modificar el tablero.", exception.getMessage());
+        assertEquals("Título Viejo", boardSimulado.getTitulo()); // El título original quedó intacto
         verify(boardRepository, never()).save(any());
     }
 }
