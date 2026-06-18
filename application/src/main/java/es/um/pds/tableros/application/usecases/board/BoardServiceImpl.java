@@ -247,4 +247,34 @@ public class BoardServiceImpl implements BoardService {
             throw new IllegalStateException("El usuario no tiene permisos de escritura en este tablero");
         }
     }
+    
+    /**
+     * @brief Implementación del caso de uso para renombrar un tablero. 
+     * 1. Recupera el agregado Board a través del puerto de salida (Repositorio).
+     * 2. Evalúa las políticas de seguridad del dominio, verificando que el usuario solicitante 
+     * sea el propietario absoluto o disponga de permisos explícitos de escritura (Rol.WRITE).
+     * 3. Delega la mutación al método protegido del agregado.
+     * 4. Persiste el nuevo estado a través del repositorio.
+     * * @param cmd Comando con los datos encapsulados de la petición.
+     * @throws IllegalArgumentException Si el tablero no existe en la persistencia.
+     * @throws IllegalStateException Si el usuario no tiene los privilegios de escritura necesarios.
+     */
+    @Override
+    public void renombrarTablero(es.um.pds.tableros.domain.ports.input.board.commands.RenombrarBoardCommand cmd) {
+        Board board = boardRepository.findById(new BoardId(cmd.boardId()))
+                .orElseThrow(() -> new IllegalArgumentException("Tablero no encontrado"));
+
+        // Validar permisos
+        boolean esDueno = board.getEmail().value().equals(cmd.emailUsuario());
+        boolean tienePermisoWrite = board.getPermisos().containsKey(new Email(cmd.emailUsuario())) &&
+                                    board.getPermisos().get(new Email(cmd.emailUsuario())) == Rol.WRITE;
+
+        if (!esDueno && !tienePermisoWrite) {
+            throw new IllegalStateException("Solo los usuarios con permiso de escritura pueden modificar el tablero.");
+        }
+
+        // Modificar y guardar
+        board.modificarTitulo(cmd.nuevoTitulo());
+        boardRepository.save(board);
+    }
 }

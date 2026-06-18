@@ -32,6 +32,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
@@ -954,5 +955,42 @@ public class BoardViewController {
         return boardService.obtenerTableroPorId(boardIdActual)
                 .map(boardMapper::toDTO)
                 .orElseThrow(() -> new IllegalArgumentException("El tablero ya no existe"));
+    }
+    
+    /**
+     * @brief Maneja el evento FXML para la edición interactiva del título del tablero.
+     * * Verifica que el usuario activo posea los privilegios de escritura necesarios. 
+     * En caso afirmativo, despliega un cuadro de diálogo nativo de JavaFX (TextInputDialog) 
+     * para capturar el nuevo texto. Si el texto es válido y distinto al actual, construye 
+     * un objeto de comando inmutable (RenombrarBoardCommand) y delega la ejecución 
+     * al puerto de entrada de la capa de aplicación, forzando un repintado de la vista al finalizar.
+     */
+    @FXML
+    public void handleEditarTitulo() {
+        if (!this.tienePermisoEscrituraActual) {
+            mostrarAlertaError("Permiso denegado", "Solo los usuarios con permiso de escritura pueden modificar el tablero.");
+            return;
+        }
+
+        TextInputDialog dialog = new TextInputDialog(lblTituloTablero.getText());
+        dialog.setTitle("Editar Tablero");
+        dialog.setHeaderText("Modificar el título del tablero");
+        dialog.setContentText("Nuevo título:");
+
+        dialog.showAndWait().ifPresent(nuevoTitulo -> {
+            if (!nuevoTitulo.isBlank() && !nuevoTitulo.equals(lblTituloTablero.getText())) {
+                try {
+                    String emailUsuario = sceneManager.getCurrentUserEmail();
+                    
+                    es.um.pds.tableros.domain.ports.input.board.commands.RenombrarBoardCommand cmd = 
+                        new es.um.pds.tableros.domain.ports.input.board.commands.RenombrarBoardCommand(boardIdActual, nuevoTitulo, emailUsuario);
+                    boardService.renombrarTablero(cmd);
+                    
+                    renderizarTodo(); // Refresca la vista y muestra el nuevo título
+                } catch (Exception e) {
+                    mostrarAlertaError("Error al modificar", e.getMessage());
+                }
+            }
+        });
     }
 }
